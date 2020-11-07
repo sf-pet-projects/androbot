@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import Bot, Dispatcher, executor
+
 from loguru import logger
 from pydantic import BaseSettings, Field
 
