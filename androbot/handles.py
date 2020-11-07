@@ -1,10 +1,15 @@
+from .main import dp
+
+from dataclasses import *
 from aiogram import types as aiotypes
 
-from .main import dp
 
 
 @dp.message_handler(commands=["start", "help"])
-async def send_welcome(message: aiotypes.Message):
+async def send_welcome(
+
+
+        message: aiotypes.Message):
     """
     This handler will be called when user sends `/start` or `/help` command
     """
