@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "androbot"
+version = "0.0.1"
+description = "Telegram bot that tests your skills in android development"
+authors = ["Nikita Churikov <nikita@chur.ru>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+aiogram = "^2.10.1"
+loguru = "^0.5.3"
+python-dotenv = "^0.15.0"
+pydantic = "^1.7.2"
+
+[tool.poetry.dev-dependencies]
+pre-commit = "^2.8.2"
+mypy = "^0.790"
+
+[tool.black]
+line-length = 100
+target_version = ["py38"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
