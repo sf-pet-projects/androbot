@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     tg_api_token: str = Field(..., env="TG_API_TOKEN")
 
     class Config:
-        env_file = "../.env"
+        env_file = ".env"
         env_file_encoding = "utf-8"
 
 
