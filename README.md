@@ -4,7 +4,7 @@
 
 **Установка**  
 
-Требуется установка [poetry](https://github.com/python-poetry/poetry) в системе.  
+Требуется установка [`poetry`](https://github.com/python-poetry/poetry) в системе.  
 
 ```
 git clone https://github.com/sf-pet-projects/androbot
@@ -14,7 +14,12 @@ poetry install
 
 **Использование pre-commit**  
 
-В этом проекте используются `isort`, `black`, `flake8`, `mypy`.  
+В проекте используются:
+ - [`isort`](https://pycqa.github.io/isort/)
+ - [`black`](https://black.readthedocs.io/en/stable/)
+ - [`flake8`](https://flake8.pycqa.org/en/latest/)
+ - [`mypy`](http://mypy-lang.org/)
+ 
 Они помогают нам делать код чище, проверяют его на соблюдение стандартов.
 
 `pre-commit install` установить git hooks, которые будут запускать проверки перед каждым коммитом, сделают исправления или не дадут закоммитить, если код не пройдет првоерку.
