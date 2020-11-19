@@ -4,12 +4,31 @@
 
 **Установка**  
 
-Требуется установка [poetry](https://github.com/python-poetry/poetry) в системе.  
+Требуется установка [`poetry`](https://github.com/python-poetry/poetry) в системе.  
 
 ```
 git clone https://github.com/sf-pet-projects/androbot
 cd androbot
 poetry install
+```
+
+**Использование pre-commit**  
+
+В проекте используются:
+ - [`isort`](https://pycqa.github.io/isort/)
+ - [`black`](https://black.readthedocs.io/en/stable/)
+ - [`flake8`](https://flake8.pycqa.org/en/latest/)
+ - [`mypy`](http://mypy-lang.org/)
+ 
+Они помогают нам делать код чище, проверяют его на соблюдение стандартов.
+
+`poetry run pre-commit install` установить git hooks, которые будут запускать проверки перед каждым коммитом, сделают исправления или не дадут закоммитить, если код не пройдет првоерку.
+
+Также можно вручную запустить проверку и исправление. Для этого нужно добавить в stage необходимые файлы, и выполнить pre-commit
+
+```
+git add andobot/main.py
+poetry run pre-commit
 ```
 
 **Указание переменных окружения**
