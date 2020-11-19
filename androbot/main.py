@@ -2,15 +2,12 @@ import logging
 
 from aiogram import Bot, Dispatcher, executor
 from loguru import logger
-from pydantic import BaseSettings, Field
 
+from . import models
+from .config import settings
+from .database import engine
 
-class Settings(BaseSettings):
-    tg_api_token: str = Field(..., env="TG_API_TOKEN")
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+models.Base.metadata.create_all(bind=engine)
 
 
 class InterceptHandler(logging.Handler):
@@ -33,7 +30,6 @@ class InterceptHandler(logging.Handler):
 logging.basicConfig(handlers=[InterceptHandler()], level=0)
 
 # Initialize bot and dispatcher
-settings = Settings()
 bot = Bot(token=settings.tg_api_token)
 dp = Dispatcher(bot)
 
