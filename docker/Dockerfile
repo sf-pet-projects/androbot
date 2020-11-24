@@ -13,6 +13,7 @@ WORKDIR /code
 COPY pyproject.toml poetry.lock /code/
 
 COPY ./androbot  /code/androbot/
+COPY ./templates  /code/templates/
 
 RUN poetry install --no-dev --no-interaction --no-ansi
 
