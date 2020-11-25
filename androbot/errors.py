@@ -17,9 +17,3 @@ class BaseAppError(Exception):
 
 class UserExistsError(BaseAppError):
     pass
-
-
-class ErrorExample(BaseAppError):
-    @property
-    def response(self) -> str:
-        return "Error error"
