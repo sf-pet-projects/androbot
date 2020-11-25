@@ -2,7 +2,7 @@ from aiogram import types as aiotypes
 
 from . import backend, crud, states, views
 from .database import SessionLocal
-from .errors import ErrorExample
+from .errors import ErrorExample, UserExistsError
 from .main import bot, dp
 from .schemas import User, UserCreate
 
@@ -17,8 +17,20 @@ async def send_start_screen(message: aiotypes.Message):
     2. Регистрируем событие что пользователь нажал старт
     3. Формируем ответное сообщение и показываем главное меню
     """
-    backend.add_user(message.from_user)
     backend.register_action("start", message)
+
+    try:
+        backend.add_user(message)
+        view = views.get_hello_message(message)
+        await bot.send_message(
+            text=view.text,
+            chat_id=message.chat.id,
+            parse_mode=aiotypes.ParseMode.MARKDOWN,
+            reply_markup=view.markup,
+        )
+
+    except UserExistsError:
+        pass
 
     state = dp.current_state(user=message.from_user.id)
     await state.set_state("main_menu")
@@ -33,84 +45,55 @@ async def send_start_screen(message: aiotypes.Message):
     )
 
 
-@dp.callback_query_handler(
-    lambda c: c.data == "main_menu", state=states.MainDialogueStates.IN_PROFILE
-)
-async def callback_show_main_menu(callback_query: aiotypes.callback_query):
+@dp.message_handler(text="Профиль", state=states.MainDialogueStates.MAIN_MENU)
+async def send_user_profile(message: aiotypes.Message):
     """
-    Обработчик для inline кнопки "Главное меню"
+    Обработчик для кнопки главного меню "Профиль"
     """
-    await bot.answer_callback_query(callback_query.id)
 
-    await bot.edit_message_reply_markup(
-        callback_query.message.chat.id,
-        callback_query.message.message_id,
-        callback_query.inline_message_id,
-    )
-
-    state = dp.current_state(user=callback_query.from_user.id)
-    await state.set_state("main_menu")
-
-    view = views.get_main_menu(callback_query)
-
-    await bot.send_message(
-        text=view.text,
-        chat_id=callback_query.message.chat.id,
-        parse_mode=aiotypes.ParseMode.MARKDOWN,
-        reply_markup=view.markup,
-    )
-
-
-@dp.callback_query_handler(
-    lambda c: c.data == "open_profile", state=states.MainDialogueStates.MAIN_MENU
-)
-async def callback_show_profile(callback_query: aiotypes.callback_query):
-    """
-    Обработчик для inline кнопки "Профиль"
-    """
-    await bot.answer_callback_query(callback_query.id)
-
-    await bot.edit_message_reply_markup(
-        callback_query.message.chat.id,
-        callback_query.message.message_id,
-        callback_query.inline_message_id,
-    )
-
-    state = dp.current_state(user=callback_query.from_user.id)
+    state = dp.current_state(user=message.from_user.id)
     await state.set_state("in_profile")
 
-    view = views.get_profile(callback_query)
+    view = views.get_profile(message)
 
     await bot.send_message(
         text=view.text,
-        chat_id=callback_query.message.chat.id,
+        chat_id=message.chat.id,
         parse_mode=aiotypes.ParseMode.MARKDOWN,
         reply_markup=view.markup,
     )
 
 
-@dp.callback_query_handler(
-    lambda c: c.data == "android_developer", state=states.MainDialogueStates.MAIN_MENU
-)
-async def callback_first_question(callback_query: aiotypes.callback_query):
+@dp.message_handler(text="Android Developer", state=states.MainDialogueStates.MAIN_MENU)
+async def show_first_question(message: aiotypes.Message):
     """
-    Обработчик для inline кнопки начала тестирования по направлению android
-    Начинаем тестирование
+    Обработчик для кнопки выбора специализации
     """
-    await bot.answer_callback_query(callback_query.id)
 
-    await bot.edit_message_reply_markup(
-        callback_query.message.chat.id,
-        callback_query.message.message_id,
-        callback_query.inline_message_id,
-    )
-
-    state = dp.current_state(user=callback_query.from_user.id)
+    state = dp.current_state(user=message.from_user.id)
     await state.set_state("first_question")
 
     text_answer = "Ответьте на Главный вопрос жизни, Вселенной и всего такого."
 
-    await bot.send_message(callback_query.message.chat.id, text_answer)
+    await bot.send_message(message.chat.id, text_answer)
+
+
+@dp.message_handler(text="Главное меню", state=states.MainDialogueStates.IN_PROFILE)
+async def show_main_menu(message: aiotypes.Message):
+    """
+    Обработчик для кнопки "Главное меню"
+    """
+    state = dp.current_state(user=message.from_user.id)
+    await state.set_state("main_menu")
+
+    view = views.get_main_menu(message)
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
 
 
 @dp.message_handler(commands=["help"], state="*")
