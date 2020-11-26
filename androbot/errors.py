@@ -16,4 +16,8 @@ class BaseAppError(Exception):
 
 
 class UserExistsError(BaseAppError):
+    """
+    Возникает когда пытаемся добавить пользователя, который уже существует в базе
+    """
+
     pass

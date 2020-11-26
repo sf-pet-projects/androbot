@@ -8,6 +8,12 @@ class PydanticConfig:
 
 @dataclass(config=PydanticConfig)
 class View:
+    """
+    Класс предназначен для подготовки ответа бота.
+    Содержит текст ответа (в разметке Markdown), а также клавитуру,
+    которую отправит бот в ответ в параметре reply_markup
+    """
+
     text: str
     markup: aiotypes.ReplyKeyboardMarkup = None
 
