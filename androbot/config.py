@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     db_password: str = Field(..., env="DB_PASSWORD")
     db_host: str = Field(..., env="DB_HOST")
     db_name: str = Field(..., env="DB_NAME")
+    answers_types: str = Field(..., env="ANSWERS_TYPES")
 
     class Config:
         env_file = ".env"

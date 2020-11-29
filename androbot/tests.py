@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from androbot.actions import get_main_menu
+from androbot.actions import get_main_menu, start_new_test
 
 
 class Test(TestCase):
@@ -11,3 +11,6 @@ class Test(TestCase):
         )
 
         self.assertEqual(get_main_menu(), [welcome_message.strip(), ["android"]])
+
+    def test_start_new_test(self):
+        self.assertEqual(start_new_test(), ["voice", "text", "mental"])
