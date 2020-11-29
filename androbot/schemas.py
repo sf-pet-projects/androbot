@@ -41,6 +41,7 @@ class TelegramUserBase(BaseModel):
     tg_user_id: int
     name: str
     username: str
+    specialty: str
 
 
 class TelegramUser(TelegramUserBase):
@@ -48,11 +49,22 @@ class TelegramUser(TelegramUserBase):
         orm_mode = True
 
 
-class Answer:
+class Answer(BaseModel):
+    answer_id: int
+    quest_id: int
+    tg_user_id: int
+    answer_type: str
+    text_answer: str
+    link_to_audio_answer: str
+
+    class Config:
+        orm_mode = True
+
+
+class Question(BaseModel):
     quest_id: int
     question_type: str
     text_answer: str
-    link_to_audio_answer: str
 
     class Config:
         orm_mode = True
