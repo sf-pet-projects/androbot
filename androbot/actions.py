@@ -36,7 +36,7 @@ def remove_user(tg_user: schemas.TelegramUser):
     db = SessionLocal()
     if is_tg_user_already_exist(db, tg_user.tg_user_id):
         crud.remove_answers(db, tg_user.tg_user_id)
-        crud.remove_tg_user(db, tg_user)
+        crud.remove_tg_user(db, tg_user.tg_user_id)
         logger.info(
             "Remove telegram user tg_user_id={}, name={}, username={}, specialty={} and answers",
             tg_user.tg_user_id,
@@ -72,11 +72,21 @@ def remove_questions(specialty: str):
     return db_user
 
 
-def get_next_test(tg_user: schemas.TelegramUser) -> Question:
+def get_next_test(tg_user_id: int) -> Question:
     db = SessionLocal()
-    passed_questions = crud.get_passed_questions(db, tg_user.tg_user_id)
+    tg_user = crud.get_tg_user(db, tg_user_id)
+    passed_questions = crud.get_passed_questions(db, tg_user_id)
     all_question = crud.get_all_questions(db, tg_user.specialty)
     next_quest_id = random.choice(list(set(all_question) - set(passed_questions)))
+    crud.set_current_question(db, tg_user_id, next_quest_id)
     next_quest = get_question(db, next_quest_id)
     db.close()
     return next_quest
+
+
+def get_test_result(tg_user_id: int) -> str:
+    db = SessionLocal()
+    quest_id = crud.get_current_question(db, tg_user_id)
+    quest = get_question(db, quest_id)
+    db.close()
+    return quest.text_answer

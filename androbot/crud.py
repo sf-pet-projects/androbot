@@ -20,6 +20,12 @@ def get_tg_users(db: Session, skip: int = 0):
     return db.query(models.TelegramUser).offset(skip).all()
 
 
+def get_tg_user(db: Session, tg_user_id: int) -> models.TelegramUser:
+    return (
+        db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).first()
+    )
+
+
 def is_tg_user_already_exist(db: Session, tg_user_id: int):
     return (
         db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).count()
@@ -64,8 +70,8 @@ def add_question(db: Session, question: schemas.Question):
     return db_answer
 
 
-def remove_tg_user(db: Session, user: schemas.TelegramUser):
-    db.delete(user)
+def remove_tg_user(db: Session, tg_user_id: int):
+    db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).delete()
     db.commit()
 
 
@@ -88,6 +94,26 @@ def get_passed_questions(db: Session, tg_user_id: int):
     )
 
 
+def set_current_question(db: Session, tg_user_id: int, quest_id: int):
+    db_session = models.CurrentSession(
+        quest_id=quest_id,
+        tg_user_id=tg_user_id,
+    )
+    db.add(db_session)
+    db.commit()
+    db.refresh(db_session)
+    return db_session
+
+
+def get_current_question(db: Session, tg_user_id: int):
+    session = (
+        db.query(models.CurrentSession)
+        .filter(models.CurrentSession.tg_user_id == tg_user_id)
+        .first()
+    )
+    return session.quest_id
+
+
 def get_all_questions(db: Session, specialty: str):
     return list(
         map(
@@ -97,7 +123,7 @@ def get_all_questions(db: Session, specialty: str):
     )
 
 
-def get_question(db: Session, quest_id: int):
+def get_question(db: Session, quest_id: int) -> Question:
     return db.query(models.Question).filter(models.Question.quest_id == quest_id).first()
 
 

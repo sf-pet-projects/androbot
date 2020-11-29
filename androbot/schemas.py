@@ -68,3 +68,11 @@ class Question(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class CurrentSession(BaseModel):
+    quest_id: int
+    tg_user_id: int
+
+    class Config:
+        orm_mode = True
