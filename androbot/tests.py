@@ -10,4 +10,4 @@ class Test(TestCase):
             'специальность:\r\n`Android`\r\n```print("Hello world")``` '
         )
 
-        self.assertEqual(get_main_menu(), [welcome_message, ["android"]])
+        self.assertEqual(get_main_menu(), [welcome_message.strip(), ["android"]])
