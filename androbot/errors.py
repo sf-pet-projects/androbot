@@ -1,4 +1,5 @@
 from aiogram import types as aiotypes
+from loguru import logger
 
 
 class BaseAppError(Exception):
@@ -19,3 +20,17 @@ class ErrorExample(BaseAppError):
     @property
     def response(self) -> str:
         return "Error error"
+
+
+class UserExistsException(BaseAppError):
+    @property
+    def response(self) -> str:
+        logger.warning("You try to add already exists user")
+        return "You try to add already exists user"
+
+
+class UserNotExistsException(BaseAppError):
+    @property
+    def response(self) -> str:
+        logger.warning("You try to remove doesn't exist user")
+        return "You try to remove doesn't exist user"

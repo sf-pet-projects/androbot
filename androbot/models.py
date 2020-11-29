@@ -24,3 +24,20 @@ class Item(Base):
     owner_id = Column(Integer, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="items")
+
+
+class TelegramUser(Base):
+    __tablename__ = "tg_users"
+
+    tg_user_id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=False, index=True)
+    username = Column(String, unique=True, index=True)
+
+
+class Answer(Base):
+    __tablename__ = "answer"
+
+    quest_id = Column(Integer, primary_key=True, index=True)
+    question_type = Column(String, unique=False, index=True)
+    text_answer = Column(String, unique=False, index=True)
+    link_to_audio_answer = Column(String, unique=False, index=True)

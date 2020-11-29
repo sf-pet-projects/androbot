@@ -35,3 +35,24 @@ class User(UserBase):
 
     class Config:
         orm_mode = True
+
+
+class TelegramUserBase(BaseModel):
+    tg_user_id: int
+    name: str
+    username: str
+
+
+class TelegramUser(TelegramUserBase):
+    class Config:
+        orm_mode = True
+
+
+class Answer:
+    quest_id: int
+    question_type: str
+    text_answer: str
+    link_to_audio_answer: str
+
+    class Config:
+        orm_mode = True
