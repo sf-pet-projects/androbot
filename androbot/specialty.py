@@ -2,5 +2,5 @@ from enum import Enum
 
 
 class Specialty(Enum):
-    ANDROID = "android"
+    ANDROID = "Android Developer"
     FOR_TEST = "test"

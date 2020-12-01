@@ -19,12 +19,7 @@ from androbot.utils import Utils
 
 class Test(TestCase):
     def test_get_main_menu(self):
-        welcome_message = (
-            "Привет, я помогу тебе подготовиться к собеседованию\r\nВыбери "
-            'специальность:\r\n`Android`\r\n```print("Hello world")``` '
-        )
-
-        self.assertEqual(get_main_menu(), [welcome_message.strip(), ["android", "test"]])
+        self.assertEqual(get_main_menu(), ["Android Developer", "test"])
 
     def test_start_new_test(self):
         self.assertEqual(start_new_test(), ["voice", "text", "mental"])

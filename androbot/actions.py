@@ -1,4 +1,3 @@
-import codecs
 import random
 
 from loguru import logger
@@ -12,9 +11,7 @@ from .specialty import Specialty
 
 
 def get_main_menu():
-    with codecs.open("welcome.message", "r", encoding="utf-8") as file:
-        welcome_message = file.read()
-        return [welcome_message, [e.value for e in Specialty]]
+    return [e.value for e in Specialty]
 
 
 def start_new_test():
