@@ -1,11 +1,9 @@
-from aiogram import types as aiotypes
 from loguru import logger
 
 
 class BaseAppError(Exception):
-    def __init__(self, message_text: str, message: aiotypes.Message) -> None:
+    def __init__(self, message_text: str) -> None:
         super().__init__(message_text)
-        self.message = message
         self.message_text = message_text
 
     def __str__(self) -> str:

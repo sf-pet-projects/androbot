@@ -14,9 +14,9 @@ async def send_welcome(message: aiotypes.Message):
 
 
 @dp.message_handler(commands=["error"])
-async def raise_error_example(message: aiotypes.Message):
+async def raise_error_example():
     """При вызове команды /error в боте будет выдана демонстрация работы обработки ошибок"""
-    raise ErrorExample("Error occurred intentionally", message)
+    raise ErrorExample("Error occurred intentionally")
 
 
 @dp.message_handler(commands=["user"])

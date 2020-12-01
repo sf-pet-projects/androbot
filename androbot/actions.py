@@ -21,7 +21,7 @@ def start_new_test():
 def add_user(tg_user: schemas.TelegramUser):
     db = SessionLocal()
     if is_tg_user_already_exist(db, tg_user.tg_user_id):
-        return UserExistsException
+        raise UserExistsException("You try to add already exists user")
     else:
         db_user = crud.create_tg_user(db, tg_user)
         logger.info("Add new telegram user {}", tg_user)
@@ -42,7 +42,7 @@ def remove_user(tg_user: schemas.TelegramUser):
             tg_user.specialty,
         )
     else:
-        return UserNotExistsException
+        raise UserNotExistsException("You try to remove doesn't exist user")
     db.close()
 
 

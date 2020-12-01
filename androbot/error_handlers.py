@@ -11,5 +11,5 @@ async def handle_app_error(update: aiotypes.Update, exception: BaseAppError) -> 
         logger.error("Expected error occurred {}", type(exception))
     elif isinstance(exception, BaseAppError):
         logger.error("Unexpected error occurred {}", exception)
-    await exception.message.answer(exception.response)
+    await update.message.answer(exception.response)
     return True

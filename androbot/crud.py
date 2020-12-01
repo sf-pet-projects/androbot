@@ -29,7 +29,7 @@ def get_tg_user(db: Session, tg_user_id: int) -> models.TelegramUser:
 def is_tg_user_already_exist(db: Session, tg_user_id: int):
     return (
         db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).count()
-        == 1
+        > 0
     )
 
 
