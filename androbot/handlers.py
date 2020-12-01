@@ -44,6 +44,7 @@ async def send_start_screen(message: aiotypes.Message):
     )
 
 
+
 @dp.message_handler(text="Android Developer", state=states.DialogueStates.MAIN_MENU)
 async def show_android_developer_init(message: aiotypes.Message):
     """
