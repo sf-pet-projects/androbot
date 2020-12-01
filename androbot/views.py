@@ -1,14 +1,15 @@
 import aiogram.types as aiotypes
 
+from .androbot_types import View
+from .config import settings
 from .templates import render_message
-from .types import View
 
 
 def get_main_menu(message: aiotypes.Message) -> View:
     """
     Возвращает View старатовой страницы бота
     """
-    template_file = r"templates/start.md"
+    template_file = settings.static_folder / "start.md"
 
     with open(template_file, "r", encoding="utf-8") as f:
         answer_text = f.read()
@@ -23,7 +24,7 @@ def get_hello_message(message: aiotypes.Message) -> View:
     """
     Возвращает текст приветствия бота - новому пользователю
     """
-    template_file = r"templates/hello.md"
+    template_file = settings.static_folder / "hello.md"
 
     with open(template_file, "r", encoding="utf-8") as f:
         answer_text = f.read()

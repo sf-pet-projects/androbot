@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic import BaseSettings, Field
 
 
@@ -7,6 +9,7 @@ class Settings(BaseSettings):
     db_password: str = Field(..., env="DB_PASSWORD")
     db_host: str = Field(..., env="DB_HOST")
     db_name: str = Field(..., env="DB_NAME")
+    static_folder: Path = Field(..., env="STATIC_FOLDER")
 
     class Config:
         env_file = ".env"
