@@ -1,7 +1,6 @@
 from aiogram.utils.helper import Helper, HelperMode, ListItem
 
 
-
 class DialogueStates(Helper):
     """
     Состояния бота в режиме конечных автоматов, в главном меню

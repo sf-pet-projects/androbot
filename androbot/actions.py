@@ -3,6 +3,10 @@ import aiogram.types as aiotypes
 from .errors import UserExistsError
 
 
+def get_main_menu():
+    return ["Android Developer"]
+
+
 def add_user(message: aiotypes.Message):
     """
     Добавляем нового пользователя в базу

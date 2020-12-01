@@ -1,6 +1,6 @@
 from aiogram import types as aiotypes
 
-from . import backend, states, views
+from . import actions, states, views
 from .errors import UserExistsError
 from .main import bot, dp
 
@@ -15,10 +15,10 @@ async def send_start_screen(message: aiotypes.Message):
     2. Регистрируем событие что пользователь нажал старт
     3. Формируем ответное сообщение и показываем главное меню
     """
-    backend.register_action("start", message)
+    actions.register_action("start", message)
 
     try:
-        backend.add_user(message)
+        actions.add_user(message)
 
         view = views.get_hello_message(message)
         await bot.send_message(
@@ -42,7 +42,6 @@ async def send_start_screen(message: aiotypes.Message):
         parse_mode=aiotypes.ParseMode.MARKDOWN,
         reply_markup=view.markup,
     )
-
 
 
 @dp.message_handler(text="Android Developer", state=states.DialogueStates.MAIN_MENU)
