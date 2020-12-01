@@ -1,14 +1,4 @@
-from androbot.actions import (
-    add_answer,
-    add_question,
-    add_user,
-    get_main_menu,
-    get_next_test,
-    get_test_result,
-    remove_questions,
-    remove_user,
-    start_new_test,
-)
+from androbot.actions import Actions, get_main_menu, start_new_test
 from androbot.errors import UserExistsException, UserNotExistsException
 from androbot.schemas import Answer, Question, TelegramUser
 from androbot.specialty import Specialty
@@ -30,9 +20,9 @@ def test_add_user():
         username=Utils.get_random_text(10),
         specialty=Specialty.ANDROID.value,
     )
-    db_user = add_user(user)
+    db_user = Actions().add_user(user)
     assert db_user.tg_user_id == user.tg_user_id
-    remove_user(db_user)
+    Actions().remove_user(db_user)
 
 
 def test_add_already_exist_user():
@@ -42,9 +32,9 @@ def test_add_already_exist_user():
         username=Utils.get_random_text(10),
         specialty=Specialty.ANDROID.value,
     )
-    add_user(user)
+    Actions().add_user(user)
     try:
-        add_user(user)
+        Actions().add_user(user)
         assert False
     except UserExistsException:
         assert True
@@ -58,7 +48,7 @@ def test_remove_not_exist_user():
         specialty=Specialty.ANDROID.value,
     )
     try:
-        remove_user(user)
+        Actions().remove_user(user)
         assert False
     except UserNotExistsException:
         assert True
@@ -110,17 +100,17 @@ def test_get_next_test():
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
     )
-    add_user(user)
-    add_question(question1)
-    add_question(question2)
-    add_question(question3)
-    add_answer(answer1)
-    add_answer(answer2)
-    add_answer(answer3)
-    question = get_next_test(user.tg_user_id)
+    Actions().add_user(user)
+    Actions().add_question(question1)
+    Actions().add_question(question2)
+    Actions().add_question(question3)
+    Actions().add_answer(answer1)
+    Actions().add_answer(answer2)
+    Actions().add_answer(answer3)
+    question = Actions().get_next_test(user.tg_user_id)
     assert question.quest_id == question3.quest_id
-    remove_questions(Specialty.FOR_TEST.value)
-    remove_user(user)
+    Actions().remove_questions(Specialty.FOR_TEST.value)
+    Actions().remove_user(user)
 
 
 def test_get_test_result():
@@ -135,10 +125,10 @@ def test_get_test_result():
         question_type=Specialty.FOR_TEST.value,
         text_answer=Utils.get_random_text(10),
     )
-    add_user(user)
-    add_question(question)
-    question = get_next_test(user.tg_user_id)
-    answer = get_test_result(user.tg_user_id)
+    Actions().add_user(user)
+    Actions().add_question(question)
+    question = Actions().get_next_test(user.tg_user_id)
+    answer = Actions().get_test_result(user.tg_user_id)
     assert answer == question.text_answer
-    remove_questions(Specialty.FOR_TEST.value)
-    remove_user(user)
+    Actions().remove_questions(Specialty.FOR_TEST.value)
+    Actions().remove_user(user)
