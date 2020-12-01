@@ -36,7 +36,7 @@ def get_android_developer_init_view(message: aiotypes.Message) -> View:
     """
     Возвращает View стартового экрана тестирования по специальности Андроид разработчик
     """
-    template_file = r"templates/android_developer.md"
+    template_file = settings.static_folder / "android_developer.md"
 
     with open(template_file, "r", encoding="utf-8") as f:
         answer_text = f.read()
