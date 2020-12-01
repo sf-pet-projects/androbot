@@ -15,7 +15,9 @@ class BaseAppError(Exception):
         return "Нам жаль, но произошла непредвиденная ошибка. Пожалуйста, напишите @Ruppe об этом."
 
 
-class ErrorExample(BaseAppError):
-    @property
-    def response(self) -> str:
-        return "Error error"
+class UserExistsError(BaseAppError):
+    """
+    Возникает когда пытаемся добавить пользователя, который уже существует в базе
+    """
+
+    pass

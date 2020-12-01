@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import Bot, Dispatcher, executor
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from loguru import logger
 
 from . import models
@@ -31,7 +32,7 @@ logging.basicConfig(handlers=[InterceptHandler()], level=0)
 
 # Initialize bot and dispatcher
 bot = Bot(token=settings.tg_api_token)
-dp = Dispatcher(bot)
+dp = Dispatcher(bot, storage=MemoryStorage())
 
 
 def main(dispatcher: Dispatcher):
