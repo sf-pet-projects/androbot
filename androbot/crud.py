@@ -36,7 +36,7 @@ def create_tg_user(db: Session, user: schemas.TelegramUser):
     return db_user
 
 
-def remove_tg_user(db: Session, user: schemas.TelegramUser):
+def remove_tg_user(db: Session, user: schemas.TelegramUser) -> None:
     db.delete(user)
     db.commit()
 
