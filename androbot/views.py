@@ -3,9 +3,9 @@ import codecs
 import aiogram.types as aiotypes
 
 from . import actions
-from .androbot_types import View
 from .config import settings
 from .templates import render_message
+from .types_ import View
 
 
 def get_main_menu(message: aiotypes.Message) -> View:
