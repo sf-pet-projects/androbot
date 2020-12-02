@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     db_host: str = Field(..., env="DB_HOST")
     db_name: str = Field(..., env="DB_NAME")
     static_folder: Path = Field(..., env="STATIC_FOLDER")
+    answers_types: str = Field(..., env="ANSWERS_TYPES")
 
     class Config:
         env_file = ".env"

@@ -10,4 +10,5 @@ class DialogueStates(Helper):
 
     MAIN_MENU = ListItem()
     ANDROID_DEVELOPER_INIT_VIEW = ListItem()
+    SELECT_ANSWER_TYPE = ListItem()
     FIRST_QUESTION = ListItem()
