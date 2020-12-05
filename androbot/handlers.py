@@ -2,7 +2,7 @@ from aiogram import types as aiotypes
 
 from . import actions, states, views
 from .config import settings
-from .errors import UserExistsError
+from .errors import UserExistsException
 from .main import bot, dp
 
 
@@ -16,10 +16,8 @@ async def send_start_screen(message: aiotypes.Message):
     2. Регистрируем событие что пользователь нажал старт
     3. Формируем ответное сообщение и показываем главное меню
     """
-    actions.register_action("start", message)
-
     try:
-        actions.add_user(message)
+        actions.Actions().add_user(message)
 
         view = views.get_hello_message(message)
         await bot.send_message(
@@ -29,7 +27,7 @@ async def send_start_screen(message: aiotypes.Message):
             reply_markup=view.markup,
         )
 
-    except UserExistsError:
+    except UserExistsException:
         pass
 
     state = dp.current_state(user=message.from_user.id)
