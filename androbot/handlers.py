@@ -1,26 +1,30 @@
 from aiogram import types as aiotypes
 
-from . import actions, states, views
+from . import states, views
+from .actions import Actions
 from .config import settings
-from .errors import UserExistsError
+from .errors import UserExistsException
 from .main import bot, dp
+from .schemas import TelegramUser
 
 
 @dp.message_handler(commands=["start"], state="*")
 async def send_start_screen(message: aiotypes.Message):
     """
     Обработчик для команды start.
-
-    Выполняет действия:
-    1. Созадем пользователя в базе (если его еще нет)
-    2. Регистрируем событие что пользователь нажал старт
-    3. Формируем ответное сообщение и показываем главное меню
     """
-    actions.register_action("start", message)
+    full_user_name = " ".join(
+        [name for name in [message.from_user.first_name, message.from_user.last_name] if name]
+    )
+    tg_user = TelegramUser(
+        tg_user_id=message.from_user.id,
+        name=full_user_name,
+        username=message.from_user.username,
+        specialty="Android Developer",  # TODO это не должно быть обязательным полем
+    )
 
     try:
-        actions.add_user(message)
-
+        Actions().add_user(tg_user)
         view = views.get_hello_message(message)
         await bot.send_message(
             text=view.text,
@@ -29,10 +33,10 @@ async def send_start_screen(message: aiotypes.Message):
             reply_markup=view.markup,
         )
 
-    except UserExistsError:
+    except UserExistsException:
         pass
 
-    state = dp.current_state(user=message.from_user.id)
+    state = dp.current_state(user=tg_user.tg_user_id)
     await state.set_state("main_menu")
 
     view = views.get_main_menu(message)
@@ -104,7 +108,8 @@ async def back_to_main_menu(message: aiotypes.Message):
 @dp.message_handler(state=states.DialogueStates.SELECT_ANSWER_TYPE)
 async def show_first_question(message: aiotypes.Message):
     """
-    Зададем тестовый
+    Проверяем что-за вариант ответа он выбрал.
+    Если ОК, задаем первый вопрос.
     """
 
     if message.text.lower() not in [x.lower() for x in settings.answers_types.split(",")]:
