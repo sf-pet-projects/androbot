@@ -57,5 +57,5 @@ class Question(Base):
 class CurrentSession(Base):
     __tablename__ = "session"
 
-    tg_user_id = Column(String, primary_key=True, unique=False, index=True)
+    tg_user_id = Column(Integer, primary_key=True, unique=False, index=True)
     quest_id = Column(Integer, primary_key=False, index=True)

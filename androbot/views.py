@@ -44,17 +44,12 @@ def get_android_developer_init_view(message: aiotypes.Message) -> View:
     with open(template_file, encoding="utf-8") as f:
         answer_text = f.read()
 
-    btn_1 = aiotypes.KeyboardButton("Готов!")
-    btn_2 = aiotypes.KeyboardButton("Отмена")
-    reply_kb = (
-        aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-        .row()
-        .add(btn_1, btn_2)
-    )
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    reply_kb.row(aiotypes.KeyboardButton("Готов!"), aiotypes.KeyboardButton("Отмена"))
 
     return View(render_message(answer_text, message), reply_kb)
 
-  
+
 def get_select_answer_type_view(message: aiotypes.Message) -> View:
     """
     Возвращает View в котором предлагает ответить, каким способом пользователь предпочитает отвечать
