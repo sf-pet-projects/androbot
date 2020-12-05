@@ -1,5 +1,3 @@
-import codecs
-
 import aiogram.types as aiotypes
 
 from . import actions
@@ -14,7 +12,7 @@ def get_main_menu(message: aiotypes.Message) -> View:
     """
     template_file = settings.static_folder / "start.md"
 
-    with codecs.open(str(template_file), "r", encoding="utf-8") as f:
+    with open(template_file, encoding="utf-8") as f:
         answer_text = f.read()
 
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
@@ -31,7 +29,7 @@ def get_hello_message(message: aiotypes.Message) -> View:
     """
     template_file = settings.static_folder / "hello.md"
 
-    with codecs.open(str(template_file), "r", encoding="utf-8") as f:
+    with open(template_file, encoding="utf-8") as f:
         answer_text = f.read()
 
     return View(render_message(answer_text, message))
@@ -43,7 +41,7 @@ def get_android_developer_init_view(message: aiotypes.Message) -> View:
     """
     template_file = settings.static_folder / "android_developer.md"
 
-    with codecs.open(str(template_file), "r", encoding="utf-8") as f:
+    with open(template_file, encoding="utf-8") as f:
         answer_text = f.read()
 
     btn_1 = aiotypes.KeyboardButton("Готов!")
@@ -56,14 +54,14 @@ def get_android_developer_init_view(message: aiotypes.Message) -> View:
 
     return View(render_message(answer_text, message), reply_kb)
 
-
+  
 def get_select_answer_type_view(message: aiotypes.Message) -> View:
     """
     Возвращает View в котором предлагает ответить, каким способом пользователь предпочитает отвечать
     """
     template_file = settings.static_folder / "select_answer_type.md"
 
-    with codecs.open(str(template_file), "r", encoding="utf-8") as f:
+    with open(template_file, encoding="utf-8") as f:
         answer_text = f.read()
 
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
