@@ -1,6 +1,7 @@
 from aiogram import types as aiotypes
 
 from . import actions, states, views
+from .config import settings
 from .errors import UserExistsError
 from .main import bot, dp
 
@@ -64,10 +65,51 @@ async def show_android_developer_init(message: aiotypes.Message):
 
 
 @dp.message_handler(text="Готов!", state=states.DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+async def show_select_answer_type(message: aiotypes.Message):
+    """
+    Предагаем выбрать вариант ответа
+    """
+    state = dp.current_state(user=message.from_user.id)
+    await state.set_state("select_answer_type")
+
+    view = views.get_select_answer_type_view(message)
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+
+@dp.message_handler(text="Отмена", state=states.DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+async def back_to_main_menu(message: aiotypes.Message):
+    """
+    Возвращаемся в главное меню
+    """
+
+    state = dp.current_state(user=message.from_user.id)
+    await state.set_state("main_menu")
+
+    view = views.get_main_menu(message)
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+
+@dp.message_handler(state=states.DialogueStates.SELECT_ANSWER_TYPE)
 async def show_first_question(message: aiotypes.Message):
     """
-    Зададем вопросы
+    Зададем тестовый
     """
+
+    if message.text.lower() not in [x.lower() for x in settings.answers_types.split(",")]:
+        await message.reply("Ты выбрал некорректный вариант. Попробуй еще раз.", reply=False)
+        return
 
     state = dp.current_state(user=message.from_user.id)
     await state.set_state("first_question")

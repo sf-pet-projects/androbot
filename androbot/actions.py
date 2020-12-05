@@ -1,10 +1,15 @@
 import aiogram.types as aiotypes
 
+from .config import settings
 from .errors import UserExistsError
 
 
 def get_main_menu():
     return ["Android Developer"]
+
+
+def start_new_test():
+    return list(map(lambda x: x.strip(), settings.answers_types.split(",")))
 
 
 def add_user(message: aiotypes.Message):
