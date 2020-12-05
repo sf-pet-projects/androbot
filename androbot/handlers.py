@@ -119,25 +119,6 @@ async def show_first_question(message: aiotypes.Message):
     await bot.send_message(message.chat.id, text_answer)
 
 
-@dp.message_handler(text="Отмена", state=states.DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
-async def back_to_main_menu(message: aiotypes.Message):
-    """
-    Возвращаемся в главное меню
-    """
-
-    state = dp.current_state(user=message.from_user.id)
-    await state.set_state("main_menu")
-
-    view = views.get_main_menu(message)
-
-    await bot.send_message(
-        text=view.text,
-        chat_id=message.chat.id,
-        parse_mode=aiotypes.ParseMode.MARKDOWN,
-        reply_markup=view.markup,
-    )
-
-
 @dp.message_handler(state=states.DialogueStates.FIRST_QUESTION)
 async def check_first_question(message: aiotypes.Message):
     """
