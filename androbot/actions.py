@@ -6,7 +6,7 @@ from . import crud, schemas
 from .config import settings
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
-from .errors import UserExistsException, UserNotExistsException
+from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
 from .models import Question
 from .specialty import Specialty
 
@@ -68,7 +68,12 @@ class Actions:
         tg_user = crud.get_tg_user(self.db, tg_user_id)
         passed_questions = crud.get_passed_questions(self.db, tg_user_id)
         all_question = crud.get_all_questions(self.db, tg_user.specialty)
-        next_quest_id = random.choice(list(set(all_question) - set(passed_questions)))
+
+        new_questions = list(set(all_question) - set(passed_questions))
+        if not new_questions:
+            raise NoNewQuestionsException
+
+        next_quest_id = random.choice(new_questions)
         crud.set_current_question(self.db, tg_user_id, next_quest_id)
         next_quest = get_question(self.db, next_quest_id)
         self.db.close()

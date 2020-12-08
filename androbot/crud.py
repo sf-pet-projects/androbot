@@ -45,7 +45,6 @@ def create_tg_user(db: Session, user: schemas.TelegramUser):
 
 def add_answer(db: Session, answer: schemas.Answer):
     db_answer = models.Answer(
-        answer_id=answer.answer_id,
         quest_id=answer.quest_id,
         tg_user_id=answer.tg_user_id,
         answer_type=answer.answer_type,
@@ -95,11 +94,16 @@ def get_passed_questions(db: Session, tg_user_id: int):
 
 
 def set_current_question(db: Session, tg_user_id: int, quest_id: int):
-    db_session = models.CurrentSession(
-        quest_id=quest_id,
-        tg_user_id=tg_user_id,
-    )
-    db.add(db_session)
+    query = db.query(models.CurrentSession).filter(models.CurrentSession.tg_user_id == tg_user_id)
+    if query.count() == 1:
+        db_session = query.first()
+        db_session.quest_id = quest_id
+    else:
+        db_session = models.CurrentSession(
+            quest_id=quest_id,
+            tg_user_id=tg_user_id,
+        )
+        db.add(db_session)
     db.commit()
     db.refresh(db_session)
     return db_session

@@ -50,7 +50,6 @@ class TelegramUser(TelegramUserBase):
 
 
 class Answer(BaseModel):
-    answer_id: int
     quest_id: int
     tg_user_id: int
     answer_type: str
