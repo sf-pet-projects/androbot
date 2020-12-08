@@ -53,8 +53,8 @@ class Answer(BaseModel):
     quest_id: int
     tg_user_id: int
     answer_type: str
-    text_answer: str
-    link_to_audio_answer: str
+    text_answer: Optional[str]
+    link_to_audio_answer: Optional[str]
 
     class Config:
         orm_mode = True

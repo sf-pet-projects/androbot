@@ -68,7 +68,7 @@ def get_select_answer_type_view() -> View:
     return View(answer_text, reply_kb)
 
 
-def get_next_question(tg_user_id) -> View:
+def get_next_question(tg_user_id: int) -> View:
     """
     Возвращает View со следующим вопросом для пользователя
     """
@@ -79,11 +79,29 @@ def get_next_question(tg_user_id) -> View:
 
     try:
         question = actions.Actions().get_next_test(tg_user_id)
-        answer_text = render_message(answer_text, question=question.text_answer)
     except NoNewQuestionsException:
         return View("В базе не осталось новых вопросов")
+
+    answer_text = render_message(answer_text, question=question.text_answer)
 
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     reply_kb.row(aiotypes.KeyboardButton("Далее"), aiotypes.KeyboardButton("Не понял вопрос"))
 
     return View(answer_text, reply_kb, question.quest_id)
+
+
+def get_call_to_send_answer(answer_type: str) -> View:
+    """
+    Возвращает View с призывом написать ответ
+    """
+    template_file = settings.static_folder / "call_to_answer.md"
+
+    with open(template_file, encoding="utf-8") as f:
+        answer_text = f.read()
+
+    answer_text = render_message(answer_text, answer_type=answer_type.lower())
+
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    reply_kb.add(aiotypes.KeyboardButton("Ответил мысленно"))
+
+    return View(answer_text, reply_kb)

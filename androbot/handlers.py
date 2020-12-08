@@ -150,7 +150,16 @@ async def call_to_send_answer(message: aiotypes.Message, state: FSMContext):
     """
     Приглашаем написать ответ, если мысленно, то пусть просто нажмет ответил мысленно.
     """
-    await message.reply("Напиши ответ, или продиктуй его голосом.", reply=False)
+    state_data = await state.get_data()
+
+    view = views.get_call_to_send_answer(state_data["answer_type"])
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
 
     await states_.DialogueStates.next()
 
@@ -165,21 +174,35 @@ async def do_not_understand_question(message: aiotypes.Message, state: FSMContex
     await state.finish()
 
 
-@dp.message_handler(state=states_.DialogueStates.CALL_TO_SEND_ANSWER)
+@dp.message_handler(
+    content_types=[aiotypes.ContentType.TEXT, aiotypes.ContentType.VOICE],
+    state=[states_.DialogueStates.ASK_QUESTION, states_.DialogueStates.CALL_TO_SEND_ANSWER],
+)
 async def waiting_for_answer(message: aiotypes.Message, state: FSMContext):
     """
     Читает ответ пользователя
     """
     state_data = await state.get_data()
+    voice_id = None
+    if message.text == "Ответил мысленно":
+        answer_type = "Мысленно"
+    elif message.content_type == aiotypes.ContentType.VOICE:
+        answer_type = "Голосом"
+        voice_id = message.voice.file_id
+    elif message.content_type == aiotypes.ContentType.TEXT:
+        answer_type = "Текстом"
+    else:
+        await message.reply("Такой ответ мы не принимаем! Напиши текстом, или продиктуй!")
+        return
 
-    await message.reply(f'Ты ответил {state_data["answer_type"]}!', reply=False)
+    await message.reply(f"Ты ответил {answer_type}!", reply=False)
 
     answer = schemas.Answer(
         quest_id=state_data["question_id"],
         tg_user_id=message.from_user.id,
-        answer_type="text",
+        answer_type=answer_type,
         text_answer=message.text,
-        link_to_audio_answer="",
+        link_to_audio_answer=voice_id,
     )
 
     Actions().add_answer(answer)
