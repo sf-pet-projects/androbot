@@ -105,3 +105,34 @@ def get_call_to_send_answer(answer_type: str) -> View:
     reply_kb.add(aiotypes.KeyboardButton("Ответил мысленно"))
 
     return View(answer_text, reply_kb)
+
+
+def get_do_not_understand_question() -> View:
+    """
+    Возвращает View с просбой написать что не понятного
+    """
+    template_file = settings.static_folder / "do_not_understand.md"
+
+    with open(template_file, encoding="utf-8") as f:
+        answer_text = f.read()
+
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    reply_kb.add(aiotypes.KeyboardButton("Отмена"))
+
+    return View(answer_text, reply_kb)
+
+
+def get_why_do_not_understand() -> View:
+    """
+    Возвращает View с просбой написать что не понятного
+    """
+    template_file = settings.static_folder / "why_do_not_understand.md"
+
+    with open(template_file, encoding="utf-8") as f:
+        answer_text = f.read()
+
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    reply_kb.add(aiotypes.KeyboardButton("Главное меню"))
+    reply_kb.add(aiotypes.KeyboardButton("Решить другую задачу"))
+
+    return View(answer_text, reply_kb)

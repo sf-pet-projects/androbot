@@ -99,6 +99,7 @@ async def show_select_answer_type(message: aiotypes.Message):
 
 
 @dp.message_handler(text="Отмена", state=states_.DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+@dp.message_handler(text="Главное меню", state=states_.DialogueStates.DO_NOT_UNDERSTAND_2)
 async def back_to_main_menu(message: aiotypes.Message):
     """
     Возвращаемся в главное меню
@@ -165,20 +166,27 @@ async def call_to_send_answer(message: aiotypes.Message, state: FSMContext):
 
 
 @dp.message_handler(text="Не понял вопрос", state=states_.DialogueStates.ASK_QUESTION)
-async def do_not_understand_question(message: aiotypes.Message, state: FSMContext):
+async def do_not_understand_question(message: aiotypes.Message):
     """
     Если нажал кнопку "Не понял вопрос"
     """
-    await message.reply("Ну не понял, так не понял.", reply=False)
+    view = views.get_do_not_understand_question()
 
-    await state.finish()
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await states_.DialogueStates.DO_NOT_UNDERSTAND_1.set()
 
 
 @dp.message_handler(
     content_types=[aiotypes.ContentType.TEXT, aiotypes.ContentType.VOICE],
     state=[states_.DialogueStates.ASK_QUESTION, states_.DialogueStates.CALL_TO_SEND_ANSWER],
 )
-async def waiting_for_answer(message: aiotypes.Message, state: FSMContext):
+async def get_answer(message: aiotypes.Message, state: FSMContext):
     """
     Читает ответ пользователя
     """
@@ -210,3 +218,45 @@ async def waiting_for_answer(message: aiotypes.Message, state: FSMContext):
     await message.reply("Правильный ответ 42", reply=False)
 
     await state.finish()
+
+
+@dp.message_handler(state=states_.DialogueStates.DO_NOT_UNDERSTAND_1)
+async def why_do_not_understand(message: aiotypes.Message):
+    """
+    Получили описание, почему вопрос не понятен
+    """
+    if message.text != "Отмена":
+        pass  # TODO: записать что непонятного в вопросе
+
+    view = views.get_why_do_not_understand()
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await states_.DialogueStates.next()
+
+
+@dp.message_handler(text="Решить другую задачу", state=states_.DialogueStates.DO_NOT_UNDERSTAND_2)
+async def get_another_question(message: aiotypes.Message, state: FSMContext):
+    """
+    Выдать пользователю задачу
+    """
+    view = views.get_next_question(message.from_user.id)
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await state.update_data(question_id=view.question_id)
+
+    if view.question_id:
+        await states_.DialogueStates.ASK_QUESTION.set()
+    else:
+        await state.finish()
