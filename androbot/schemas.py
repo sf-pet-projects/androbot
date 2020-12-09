@@ -61,7 +61,6 @@ class Answer(BaseModel):
 
 
 class Question(BaseModel):
-    quest_id: int
     question_type: str
     text_answer: str
 

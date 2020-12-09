@@ -59,7 +59,6 @@ def add_answer(db: Session, answer: schemas.Answer):
 
 def add_question(db: Session, question: schemas.Question):
     db_answer = models.Question(
-        quest_id=question.quest_id,
         question_type=question.question_type,
         text_answer=question.text_answer,
     )
