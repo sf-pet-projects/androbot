@@ -77,21 +77,21 @@ def test_get_next_test():
         text_question=Utils.get_random_text(10),
     )
     answer1 = Answer(
-        quest_id=question1.id,
+        quest_id=question1.from_orm(id),
         tg_user_id=user.tg_user_id,
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
     )
     answer2 = Answer(
-        quest_id=question2.id,
+        quest_id=question2.from_orm(id),
         tg_user_id=user.tg_user_id,
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
     )
     answer3 = Answer(
-        quest=question1,
+        quest_id=question1.from_orm(id),
         tg_user_id=user.tg_user_id,
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
@@ -128,5 +128,5 @@ def test_get_test_result():
     question = Actions().get_next_test(user.tg_user_id)
     answer = Actions().get_test_result(user.tg_user_id)
     assert answer == question.text_answer
-    Actions().remove_questions(Specialty.FOR_TEST.value)
     Actions().remove_user(user)
+    Actions().remove_questions(Specialty.FOR_TEST.value)

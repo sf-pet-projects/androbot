@@ -45,7 +45,6 @@ class Answer(Base):
     answer_type = Column(String, unique=False, index=True)
     text_answer = Column(String, unique=False, index=False)
     link_to_audio_answer = Column(String, unique=False, index=False)
-    answer = relationship("question", back_populates="answer")
 
 
 class Question(Base):
@@ -55,7 +54,7 @@ class Question(Base):
     question_type = Column(String, unique=False, index=True)
     text_question = Column(String, unique=False, index=False)
     text_answer = Column(String, unique=False, index=False)
-    question = relationship("answer", back_populates="question")
+    question = relationship("Answer")
 
 
 class CurrentSession(Base):

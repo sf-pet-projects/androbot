@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
 
 from . import models, schemas, Specialty
-from .errors import UserNotExistsException
-from .models import Answer, Question
+from .models import Answer, Question, CurrentSession
 
 
 def get_user(db: Session, user_id: int):
@@ -76,6 +75,11 @@ def remove_tg_user(db: Session, tg_user_id: int):
 
 def remove_answers(db: Session, tg_user_id: int):
     db.query(Answer).filter(models.Answer.tg_user_id == tg_user_id).delete()
+    db.commit()
+
+
+def remove_sessions(db: Session, tg_user_id: int):
+    db.query(CurrentSession).filter(models.CurrentSession.tg_user_id == tg_user_id).delete()
     db.commit()
 
 

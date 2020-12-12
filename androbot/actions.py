@@ -33,6 +33,7 @@ class Actions:
 
     def remove_user(self, tg_user: schemas.TelegramUser):
         if is_tg_user_already_exist(self.db, tg_user.tg_user_id):
+            crud.remove_sessions(self.db, tg_user.tg_user_id)
             crud.remove_answers(self.db, tg_user.tg_user_id)
             crud.remove_tg_user(self.db, tg_user.tg_user_id)
             logger.info(
