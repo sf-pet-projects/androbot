@@ -1,7 +1,7 @@
+from androbot import Specialty
 from androbot.actions import Actions, get_main_menu, start_new_test
 from androbot.errors import UserExistsException, UserNotExistsException
 from androbot.schemas import Answer, Question, TelegramUser
-from androbot.specialty import Specialty
 from androbot.utils import Utils
 
 
@@ -10,7 +10,7 @@ def test_get_main_menu():
 
 
 def test_start_new_test():
-    assert start_new_test() == ["voice", "text", "mental"]
+    assert start_new_test() == ["Текстом", "Голосом", "Мысленно"]
 
 
 def test_add_user():
@@ -62,39 +62,36 @@ def test_get_next_test():
         specialty=Specialty.FOR_TEST.value,
     )
     question1 = Question(
-        quest_id=Utils.get_random_number(5),
         question_type=Specialty.FOR_TEST.value,
         text_answer=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
     )
     question2 = Question(
-        quest_id=Utils.get_random_number(5),
         question_type=Specialty.FOR_TEST.value,
         text_answer=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
     )
     question3 = Question(
-        quest_id=Utils.get_random_number(5),
         question_type=Specialty.FOR_TEST.value,
         text_answer=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
     )
     answer1 = Answer(
-        answer_id=Utils.get_random_number(5),
-        quest_id=question1.quest_id,
+        quest_id=question1.id,
         tg_user_id=user.tg_user_id,
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
     )
     answer2 = Answer(
-        answer_id=Utils.get_random_number(5),
-        quest_id=question2.quest_id,
+        quest_id=question2.id,
         tg_user_id=user.tg_user_id,
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
     )
     answer3 = Answer(
-        answer_id=Utils.get_random_number(5),
-        quest_id=question1.quest_id,
+        quest=question1,
         tg_user_id=user.tg_user_id,
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
@@ -108,7 +105,7 @@ def test_get_next_test():
     Actions().add_answer(answer2)
     Actions().add_answer(answer3)
     question = Actions().get_next_test(user.tg_user_id)
-    assert question.quest_id == question3.quest_id
+    assert question.text_question == question3.text_question
     Actions().remove_questions(Specialty.FOR_TEST.value)
     Actions().remove_user(user)
 
@@ -121,9 +118,10 @@ def test_get_test_result():
         specialty=Specialty.FOR_TEST.value,
     )
     question = Question(
-        quest_id=Utils.get_random_number(5),
+        id=Utils.get_random_number(5),
         question_type=Specialty.FOR_TEST.value,
         text_answer=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
     )
     Actions().add_user(user)
     Actions().add_question(question)

@@ -3,11 +3,10 @@ from csv import DictReader
 from aiogram import types as aiotypes
 from aiogram.dispatcher import FSMContext
 
-from . import schemas, states_, views
+from . import schemas, states_, views, Specialty
 from .actions import Actions, start_new_test
 from .errors import UserExistsException
 from .main import bot, dp
-from .specialty import Specialty
 
 
 @dp.message_handler(commands=["add_question"], state="*")

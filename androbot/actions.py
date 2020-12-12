@@ -3,7 +3,7 @@ import random
 from loguru import logger
 
 from . import crud, schemas
-from .config import settings
+from .answerType import AnswerType
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
 from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
@@ -16,11 +16,10 @@ def get_main_menu():
 
 
 def start_new_test():
-    return list(map(lambda x: x.strip(), settings.answers_types.split(",")))
+    return [e.value for e in AnswerType]
 
 
 class Actions:
-
     db = SessionLocal()
 
     def add_user(self, tg_user: schemas.TelegramUser):
@@ -84,3 +83,10 @@ class Actions:
         quest = get_question(self.db, quest_id)
         self.db.close()
         return quest.text_answer
+
+    def edit_specialty(self, tg_user_id: int, new_specialty: Specialty):
+        if is_tg_user_already_exist(self.db, tg_user_id):
+            crud.edit_specialty(self.db, tg_user_id, new_specialty)
+        else:
+            raise UserNotExistsException("You try to add specialty for not exist user")
+        self.db.close()

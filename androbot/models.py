@@ -33,29 +33,34 @@ class TelegramUser(Base):
     name = Column(String, unique=False, index=True)
     username = Column(String, unique=True, index=True)
     specialty = Column(String, unique=False, index=True)
+    session = relationship("CurrentSession")
 
 
 class Answer(Base):
     __tablename__ = "answer"
 
-    answer_id = Column(Integer, primary_key=True, index=True)
-    quest_id = Column(Integer, primary_key=False, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    quest_id = Column(Integer, ForeignKey("question.id"))
     tg_user_id = Column(Integer, primary_key=False, unique=False, index=True)
     answer_type = Column(String, unique=False, index=True)
     text_answer = Column(String, unique=False, index=False)
     link_to_audio_answer = Column(String, unique=False, index=False)
+    answer = relationship("question", back_populates="answer")
 
 
 class Question(Base):
     __tablename__ = "question"
 
-    quest_id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     question_type = Column(String, unique=False, index=True)
+    text_question = Column(String, unique=False, index=False)
     text_answer = Column(String, unique=False, index=False)
+    question = relationship("answer", back_populates="question")
 
 
 class CurrentSession(Base):
     __tablename__ = "session"
 
-    tg_user_id = Column(Integer, primary_key=True, unique=False, index=True)
-    quest_id = Column(Integer, primary_key=False, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
+    quest_id = Column(Integer, ForeignKey("question.id"))

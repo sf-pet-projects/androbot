@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
-from . import models, schemas
+from . import models, schemas, Specialty
+from .errors import UserNotExistsException
 from .models import Answer, Question
 
 
@@ -86,7 +87,7 @@ def remove_questions(db: Session, specialty: str):
 def get_passed_questions(db: Session, tg_user_id: int):
     return list(
         map(
-            lambda it: it.quest_id,
+            lambda it: it.id,
             db.query(models.Answer).filter(models.Answer.tg_user_id == tg_user_id).all(),
         )
     )
@@ -108,26 +109,36 @@ def set_current_question(db: Session, tg_user_id: int, quest_id: int):
     return db_session
 
 
+def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty):
+    query = db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id)
+    if query.count() == 1:
+        db_session = query.first()
+        db_session.specialty = specialty.value
+        db.commit()
+        db.refresh(db_session)
+    db.close()
+
+
 def get_current_question(db: Session, tg_user_id: int):
     session = (
         db.query(models.CurrentSession)
         .filter(models.CurrentSession.tg_user_id == tg_user_id)
         .first()
     )
-    return session.quest_id
+    return session.id
 
 
 def get_all_questions(db: Session, specialty: str):
     return list(
         map(
-            lambda it: it.quest_id,
+            lambda it: it.id,
             db.query(models.Question).filter(models.Question.question_type == specialty).all(),
         )
     )
 
 
 def get_question(db: Session, quest_id: int) -> Question:
-    return db.query(models.Question).filter(models.Question.quest_id == quest_id).first()
+    return db.query(models.Question).filter(models.Question.id == quest_id).first()
 
 
 def create_user(db: Session, user: schemas.UserCreate):
