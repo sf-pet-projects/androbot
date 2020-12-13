@@ -124,9 +124,7 @@ def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty):
 
 
 def get_current_question(db: Session, tg_user_id: int):
-    session = (
-        db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
-    )
+    session = db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
     return session.quest_id
 
 
