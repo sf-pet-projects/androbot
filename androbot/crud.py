@@ -1,9 +1,7 @@
-from typing import List
-
 from sqlalchemy.orm import Session
 
-from . import models, schemas, Specialty
-from .models import Answer, Question, CurrentSession
+from . import Specialty, models, schemas
+from .models import Answer, CurrentSession, EventsLog, Question
 
 
 def get_user(db: Session, user_id: int):
@@ -45,6 +43,23 @@ def create_tg_user(db: Session, user: schemas.TelegramUser):
     return db_user
 
 
+def add_event(db: Session, event: schemas.EventsLog):
+    db_event = models.EventsLog(
+        tg_user_id=event.tg_user_id,
+        event_type=event.event_type.value,
+        datetime=event.datetime,
+        param1=event.param1,
+        param2=event.param2,
+        param3=event.param3,
+        param4=event.param4,
+        param5=event.param5,
+    )
+    db.add(db_event)
+    db.commit()
+    db.refresh(db_event)
+    return db_event
+
+
 def add_answer(db: Session, answer: schemas.Answer):
     db_answer = models.Answer(
         quest_id=answer.quest_id,
@@ -84,6 +99,11 @@ def remove_answers(db: Session, tg_user_id: int):
 
 def remove_sessions(db: Session, tg_user_id: int):
     db.query(CurrentSession).filter(models.CurrentSession.tg_user_id == tg_user_id).delete()
+    db.commit()
+
+
+def remove_events(db: Session, tg_user_id: int):
+    db.query(EventsLog).filter(models.EventsLog.tg_user_id == tg_user_id).delete()
     db.commit()
 
 

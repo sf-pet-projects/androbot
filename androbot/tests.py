@@ -1,7 +1,13 @@
-from androbot import Specialty
+import datetime
+
+from dateutil import tz
+
 from androbot.actions import Actions, get_main_menu, start_new_test
+from androbot.answerType import AnswerType
 from androbot.errors import UserExistsException, UserNotExistsException
-from androbot.schemas import Answer, Question, TelegramUser
+from androbot.event_types import Events
+from androbot.schemas import Answer, EventsLog, Question, TelegramUser
+from androbot.specialty import Specialty
 from androbot.utils import Utils
 
 
@@ -129,3 +135,25 @@ def test_get_test_result():
     assert right_answer == question.text_answer
     Actions().remove_user(user)
     Actions().remove_questions(Specialty.FOR_TEST.value)
+
+
+def test_add_event():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username=Utils.get_random_text(10),
+        specialty=Specialty.FOR_TEST.value,
+    )
+    Actions().add_user(user)
+    MSC = tz.gettz("Europe/Moscow")
+    event = EventsLog(
+        tg_user_id=user.tg_user_id,
+        event_type=Events.send_solution,
+        datetime=datetime.datetime.now(tz=MSC),
+        param1=Specialty.ANDROID.value,
+        param2=Utils.get_random_number(5),
+        param3=Utils.get_random_number(5),
+        param4=AnswerType.MENTAL.value,
+    )
+    Actions().add_event(event)
+    Actions().remove_user(user)

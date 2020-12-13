@@ -1,5 +1,3 @@
-from androbot.specialty import *
-from androbot.answerType import *
 from androbot.error_handlers import *  # noqa F403
 from androbot.handlers import *  # noqa F403
 from androbot.main import dp, main

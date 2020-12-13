@@ -33,6 +33,7 @@ class Actions:
 
     def remove_user(self, tg_user: schemas.TelegramUser):
         if is_tg_user_already_exist(self.db, tg_user.tg_user_id):
+            crud.remove_events(self.db, tg_user.tg_user_id)
             crud.remove_sessions(self.db, tg_user.tg_user_id)
             crud.remove_answers(self.db, tg_user.tg_user_id)
             crud.remove_tg_user(self.db, tg_user.tg_user_id)
@@ -45,6 +46,11 @@ class Actions:
             )
         else:
             raise UserNotExistsException("You try to remove doesn't exist user")
+        self.db.close()
+
+    def add_event(self, event: schemas.EventsLog):
+        crud.add_event(self.db, event)
+        logger.info("Add event {}", event)
         self.db.close()
 
     def add_question(self, question: schemas.Question):
