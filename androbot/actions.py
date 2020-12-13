@@ -68,7 +68,6 @@ class Actions:
         tg_user = crud.get_tg_user(self.db, tg_user_id)
         passed_questions = crud.get_passed_questions(self.db, tg_user_id)
         all_question = crud.get_all_questions(self.db, tg_user.specialty)
-
         new_questions = list(set(all_question) - set(passed_questions))
         if not new_questions:
             raise NoNewQuestionsException

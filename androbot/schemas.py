@@ -1,6 +1,7 @@
 from typing import List, Optional
+from uuid import uuid1
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, dataclasses
 
 
 class ItemBase(BaseModel):
@@ -61,8 +62,9 @@ class Answer(BaseModel):
 
 
 class Question(BaseModel):
+    id: Optional[int] = None
     question_type: str
-    text_question: str
+    text_question: Optional[str]
     text_answer: str
 
     class Config:

@@ -29,7 +29,7 @@ class Item(Base):
 class TelegramUser(Base):
     __tablename__ = "tg_users"
 
-    tg_user_id = Column(Integer, primary_key=True, index=True)
+    tg_user_id = Column(Integer, primary_key=True, index=True, nullable=False)
     name = Column(String, unique=False, index=True)
     username = Column(String, unique=True, index=True)
     specialty = Column(String, unique=False, index=True)
@@ -39,7 +39,7 @@ class TelegramUser(Base):
 class Answer(Base):
     __tablename__ = "answer"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
     quest_id = Column(Integer, ForeignKey("question.id"))
     tg_user_id = Column(Integer, primary_key=False, unique=False, index=True)
     answer_type = Column(String, unique=False, index=True)
@@ -50,7 +50,7 @@ class Answer(Base):
 class Question(Base):
     __tablename__ = "question"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
     question_type = Column(String, unique=False, index=True)
     text_question = Column(String, unique=False, index=False)
     text_answer = Column(String, unique=False, index=False)
@@ -60,6 +60,6 @@ class Question(Base):
 class CurrentSession(Base):
     __tablename__ = "session"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
     tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
     quest_id = Column(Integer, ForeignKey("question.id"))

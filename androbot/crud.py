@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy.orm import Session
 
 from . import models, schemas, Specialty
@@ -58,14 +60,16 @@ def add_answer(db: Session, answer: schemas.Answer):
 
 
 def add_question(db: Session, question: schemas.Question):
-    db_answer = models.Question(
+    db_question = models.Question(
         question_type=question.question_type,
         text_answer=question.text_answer,
+        text_question=question.text_question,
     )
-    db.add(db_answer)
+    db.add(db_question)
     db.commit()
-    db.refresh(db_answer)
-    return db_answer
+    db.refresh(db_question)
+    question.id = db_question.id
+    return db_question
 
 
 def remove_tg_user(db: Session, tg_user_id: int):
@@ -91,7 +95,7 @@ def remove_questions(db: Session, specialty: str):
 def get_passed_questions(db: Session, tg_user_id: int):
     return list(
         map(
-            lambda it: it.id,
+            lambda it: it.quest_id,
             db.query(models.Answer).filter(models.Answer.tg_user_id == tg_user_id).all(),
         )
     )
@@ -129,7 +133,7 @@ def get_current_question(db: Session, tg_user_id: int):
         .filter(models.CurrentSession.tg_user_id == tg_user_id)
         .first()
     )
-    return session.id
+    return session.quest_id
 
 
 def get_all_questions(db: Session, specialty: str):
@@ -142,7 +146,7 @@ def get_all_questions(db: Session, specialty: str):
 
 
 def get_question(db: Session, quest_id: int) -> Question:
-    return db.query(models.Question).filter(models.Question.id == quest_id).first()
+    return db.query(Question).filter(models.Question.id == quest_id).first()
 
 
 def create_user(db: Session, user: schemas.UserCreate):
