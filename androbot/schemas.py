@@ -1,7 +1,6 @@
 from typing import List, Optional
-from uuid import uuid1
 
-from pydantic import BaseModel, Field, dataclasses
+from pydantic import BaseModel
 
 
 class ItemBase(BaseModel):

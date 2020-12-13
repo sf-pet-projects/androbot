@@ -1,9 +1,8 @@
-from typing import List
-
 from sqlalchemy.orm import Session
 
-from . import models, schemas, Specialty
-from .models import Answer, Question, CurrentSession
+from . import models, schemas
+from .models import Answer, CurrentSession, Question, TelegramUser
+from .specialty import Specialty
 
 
 def get_user(db: Session, user_id: int):
@@ -29,10 +28,7 @@ def get_tg_user(db: Session, tg_user_id: int) -> models.TelegramUser:
 
 
 def is_tg_user_already_exist(db: Session, tg_user_id: int):
-    return (
-        db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).count()
-        > 0
-    )
+    return db.query(TelegramUser).filter(TelegramUser.tg_user_id == tg_user_id).count() > 0
 
 
 def create_tg_user(db: Session, user: schemas.TelegramUser):
@@ -129,9 +125,7 @@ def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty):
 
 def get_current_question(db: Session, tg_user_id: int):
     session = (
-        db.query(models.CurrentSession)
-        .filter(models.CurrentSession.tg_user_id == tg_user_id)
-        .first()
+        db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
     )
     return session.quest_id
 
