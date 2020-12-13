@@ -62,5 +62,5 @@ docker exec -ti androbot bash   # войти в bash
 **Запуск тестов**
 
 ```
-
+pytest androbot/tests.py
 ```
