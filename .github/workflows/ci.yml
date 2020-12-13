@@ -17,7 +17,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install poetry
-        pip install pytest
         poetry install --no-interaction
         poetry run pip3 install --pre 'black ==20.*'
         poetry run pip3 install 'isort ==5.*' 'mypy <0.800' 'flake8 == 3.8.*' 'lxml ==4.*'
@@ -28,8 +27,7 @@ jobs:
         poetry run isort --check-only --diff androbot; ISORT_CODE=$?
         poetry run flake8 --output-file=flake8-report.txt --tee androbot; FLAKE8_CODE=$?
         poetry run mypy --html-report mypy-report androbot; MYPY_CODE=$?
-        pytest tests.py; PYTEST_CODE=$?
-        if [[ $BLACK_CODE -ne 0 || $ISORT_CODE -ne 0 || $FLAKE8_CODE -ne 0 || $MYPY_CODE -ne 0 || $PYTEST_CODE -ne 0 ]]; then
+        if [[ $BLACK_CODE -ne 0 || $ISORT_CODE -ne 0 || $FLAKE8_CODE -ne 0 || $MYPY_CODE -ne 0 ]]; then
           echo "SOME CHECKS HAVE FAILED"
           exit 1
         fi
