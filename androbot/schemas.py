@@ -77,3 +77,11 @@ class CurrentSession(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class EventsLog(BaseModel):
+    tg_user_id: int
+    event_type: str
+
+    class Config:
+        orm_mode = True
