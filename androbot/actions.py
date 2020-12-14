@@ -2,13 +2,14 @@ import random
 
 from loguru import logger
 
-from . import crud, schemas
 from androbot.types.answerType import AnswerType
+from androbot.types.specialty import Specialty
+
+from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
 from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
 from .models import Question
-from androbot.types.specialty import Specialty
 
 
 def get_main_menu():

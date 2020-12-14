@@ -3,12 +3,13 @@ from csv import DictReader
 from aiogram import types as aiotypes
 from aiogram.dispatcher import FSMContext
 
+from androbot.types.specialty import Specialty
+
 from . import schemas, views
-from .types import states_
 from .actions import Actions, start_new_test
 from .errors import UserExistsException
 from .main import bot, dp
-from androbot.types.specialty import Specialty
+from .types import states_
 
 
 @dp.message_handler(commands=["add_question"], state="*")

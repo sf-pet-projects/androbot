@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
 
+from androbot.types.specialty import Specialty
+
 from . import models, schemas
 from .models import Answer, CurrentSession, Question, TelegramUser
-from androbot.types.specialty import Specialty
 
 
 def get_user(db: Session, user_id: int):
