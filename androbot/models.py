@@ -52,8 +52,10 @@ class Question(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
     question_type = Column(String, unique=False, index=True)
+    question_category = Column(String, unique=False, index=False)
     text_question = Column(String, unique=False, index=False)
     text_answer = Column(String, unique=False, index=False)
+    additional_info = Column(String, unique=False, index=False)
     question = relationship("Answer")
 
 

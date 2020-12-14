@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from . import models, schemas
 from .models import Answer, CurrentSession, Question, TelegramUser
-from .specialty import Specialty
+from androbot.types.specialty import Specialty
 
 
 def get_user(db: Session, user_id: int):
@@ -58,8 +58,10 @@ def add_answer(db: Session, answer: schemas.Answer):
 def add_question(db: Session, question: schemas.Question):
     db_question = models.Question(
         question_type=question.question_type,
+        question_category=question.question_category,
         text_answer=question.text_answer,
         text_question=question.text_question,
+        additional_info=question.additional_info,
     )
     db.add(db_question)
     db.commit()
