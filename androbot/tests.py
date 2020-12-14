@@ -3,11 +3,12 @@ import datetime
 from dateutil import tz
 
 from androbot.actions import Actions, get_main_menu, start_new_test
-from androbot.answerType import AnswerType
 from androbot.errors import UserExistsException, UserNotExistsException
-from androbot.event_types import Events
 from androbot.schemas import Answer, EventsLog, Question, TelegramUser
-from androbot.specialty import Specialty
+from androbot.types.answerType import AnswerType
+from androbot.types.category import Category
+from androbot.types.event_types import Events
+from androbot.types.specialty import Specialty
 from androbot.utils import Utils
 
 
@@ -69,16 +70,19 @@ def test_get_next_test():
     )
     question1 = Question(
         question_type=Specialty.FOR_TEST.value,
+        question_category=Category.ACTIVITY.value,
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
     question2 = Question(
         question_type=Specialty.FOR_TEST.value,
+        question_category=Category.GENERAL.value,
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
     question3 = Question(
         question_type=Specialty.FOR_TEST.value,
+        question_category=Category.VIEW.value,
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
@@ -127,6 +131,7 @@ def test_get_test_result():
         question_type=Specialty.FOR_TEST.value,
         text_answer=Utils.get_random_text(10),
         text_question=Utils.get_random_text(10),
+        additional_info=Utils.get_random_text(10),
     )
     Actions().add_user(user)
     Actions().add_question(question)

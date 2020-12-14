@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 
-from . import Specialty, models, schemas
-from .models import Answer, CurrentSession, EventsLog, Question
+from . import models, schemas
+from .models import Answer, CurrentSession, EventsLog, Question, TelegramUser
+from .types.specialty import Specialty
 
 
 def get_user(db: Session, user_id: int):
@@ -27,10 +28,7 @@ def get_tg_user(db: Session, tg_user_id: int) -> models.TelegramUser:
 
 
 def is_tg_user_already_exist(db: Session, tg_user_id: int):
-    return (
-        db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).count()
-        > 0
-    )
+    return db.query(TelegramUser).filter(TelegramUser.tg_user_id == tg_user_id).count() > 0
 
 
 def create_tg_user(db: Session, user: schemas.TelegramUser):
@@ -77,8 +75,10 @@ def add_answer(db: Session, answer: schemas.Answer):
 def add_question(db: Session, question: schemas.Question):
     db_question = models.Question(
         question_type=question.question_type,
+        question_category=question.question_category,
         text_answer=question.text_answer,
         text_question=question.text_question,
+        additional_info=question.additional_info,
     )
     db.add(db_question)
     db.commit()
@@ -148,11 +148,7 @@ def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty):
 
 
 def get_current_question(db: Session, tg_user_id: int):
-    session = (
-        db.query(models.CurrentSession)
-        .filter(models.CurrentSession.tg_user_id == tg_user_id)
-        .first()
-    )
+    session = db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
     return session.quest_id
 
 

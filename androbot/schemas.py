@@ -3,7 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 from pydantic.schema import datetime
 
-from androbot.event_types import Events
+from androbot.types.event_types import Events
 
 
 class ItemBase(BaseModel):
@@ -44,7 +44,7 @@ class TelegramUserBase(BaseModel):
     tg_user_id: int
     name: str
     username: str
-    specialty: str
+    specialty: Optional[str]
 
 
 class TelegramUser(TelegramUserBase):
@@ -66,8 +66,10 @@ class Answer(BaseModel):
 class Question(BaseModel):
     id: Optional[int] = None
     question_type: str
+    question_category: Optional[str]
     text_question: Optional[str]
     text_answer: str
+    additional_info: Optional[str]
 
     class Config:
         orm_mode = True
