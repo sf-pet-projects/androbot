@@ -1,6 +1,9 @@
 from typing import List, Optional
 
 from pydantic import BaseModel
+from pydantic.schema import datetime
+
+from androbot.types.event_types import Events
 
 
 class ItemBase(BaseModel):
@@ -75,6 +78,20 @@ class Question(BaseModel):
 class CurrentSession(BaseModel):
     quest_id: int
     tg_user_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class EventsLog(BaseModel):
+    tg_user_id: int
+    event_type: Events
+    datetime: datetime
+    param1: Optional[str]
+    param2: Optional[str]
+    param3: Optional[str]
+    param4: Optional[str]
+    param5: Optional[str]
 
     class Config:
         orm_mode = True
