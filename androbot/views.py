@@ -80,7 +80,10 @@ def get_next_question(tg_user_id: int) -> View:
     try:
         question = actions.Actions().get_next_test(tg_user_id)
     except NoNewQuestionsException:
-        return View("В базе не осталось новых вопросов")
+        reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+        reply_kb.add(aiotypes.KeyboardButton("Главное меню"))
+
+        return View("В базе не осталось новых вопросов", reply_kb)
 
     answer_text = render_message(answer_text, question=question.text_answer)
 
@@ -130,6 +133,25 @@ def get_why_do_not_understand() -> View:
 
     with open(template_file, encoding="utf-8") as f:
         answer_text = f.read()
+
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    reply_kb.add(aiotypes.KeyboardButton("Главное меню"))
+    reply_kb.add(aiotypes.KeyboardButton("Решить другую задачу"))
+
+    return View(answer_text, reply_kb)
+
+
+def get_correct_answer(question_id: int) -> View:
+    """
+    Возвращает View с правильным ответом
+    """
+    template_file = settings.static_folder / "correct_answer.md"
+
+    with open(template_file, encoding="utf-8") as f:
+        answer_text = f.read()
+
+    correct_answer = "42"
+    answer_text = render_message(answer_text, correct_answer=correct_answer)
 
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     reply_kb.add(aiotypes.KeyboardButton("Главное меню"))

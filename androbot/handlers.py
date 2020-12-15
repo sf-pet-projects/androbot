@@ -1,26 +1,33 @@
+from csv import DictReader
+
 from aiogram import types as aiotypes
 from aiogram.dispatcher import FSMContext
 
-from . import schemas, states_, views
+from . import schemas, views
 from .actions import Actions, start_new_test
 from .errors import UserExistsException
 from .main import bot, dp
-from .specialty import Specialty
-from .utils import Utils
+from .types import states_
+from .types.specialty import Specialty
 
 
 @dp.message_handler(commands=["add_question"], state="*")
 async def add_test_question(message):
     """
-    Добавим новых тупых вопросов
+    Добавим вопросов из файла
     """
-    question1 = schemas.Question(
-        quest_id=Utils.get_random_number(5),
-        question_type=Specialty.ANDROID.value,
-        text_answer=Utils.get_random_text(10),
-    )
-    Actions().add_question(question1)
-    await message.reply(question1)
+    FILE_PATH = "androbot_questions.csv"
+    with open(FILE_PATH, "r", encoding="utf-8-sig") as f:
+        reader = DictReader(f, delimiter=";")
+
+        for row in reader:
+            question = schemas.Question(
+                question_type=Specialty.ANDROID.value,
+                text_answer=row["Question"],
+            )
+
+            Actions().add_question(question)
+            await message.reply(question)
 
 
 @dp.message_handler(commands=["start"], state="*")
@@ -99,6 +106,8 @@ async def show_select_answer_type(message: aiotypes.Message):
 
 
 @dp.message_handler(text="Отмена", state=states_.DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+@dp.message_handler(text="Главное меню", state=states_.DialogueStates.GOT_ANSWER)
+@dp.message_handler(text="Главное меню", state=states_.DialogueStates.NO_NEW_QUESTIONS)
 @dp.message_handler(text="Главное меню", state=states_.DialogueStates.DO_NOT_UNDERSTAND_2)
 async def back_to_main_menu(message: aiotypes.Message):
     """
@@ -143,7 +152,7 @@ async def show_first_question(message: aiotypes.Message, state: FSMContext):
     if view.question_id:
         await states_.DialogueStates.next()
     else:
-        await state.finish()
+        await states_.DialogueStates.NO_NEW_QUESTIONS.set()
 
 
 @dp.message_handler(text="Далее", state=states_.DialogueStates.ASK_QUESTION)
@@ -182,6 +191,26 @@ async def do_not_understand_question(message: aiotypes.Message):
     await states_.DialogueStates.DO_NOT_UNDERSTAND_1.set()
 
 
+@dp.message_handler(state=states_.DialogueStates.DO_NOT_UNDERSTAND_1)
+async def why_do_not_understand(message: aiotypes.Message):
+    """
+    Получили описание, почему вопрос не понятен
+    """
+    if message.text != "Отмена":
+        pass  # TODO: записать что непонятного в вопросе
+
+    view = views.get_why_do_not_understand()
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await states_.DialogueStates.next()
+
+
 @dp.message_handler(
     content_types=[aiotypes.ContentType.TEXT, aiotypes.ContentType.VOICE],
     state=[states_.DialogueStates.ASK_QUESTION, states_.DialogueStates.CALL_TO_SEND_ANSWER],
@@ -203,8 +232,6 @@ async def get_answer(message: aiotypes.Message, state: FSMContext):
         await message.reply("Такой ответ мы не принимаем! Напиши текстом, или продиктуй!")
         return
 
-    await message.reply(f"Ты ответил {answer_type}!", reply=False)
-
     answer = schemas.Answer(
         quest_id=state_data["question_id"],
         tg_user_id=message.from_user.id,
@@ -215,20 +242,7 @@ async def get_answer(message: aiotypes.Message, state: FSMContext):
 
     Actions().add_answer(answer)
 
-    await message.reply("Правильный ответ 42", reply=False)
-
-    await state.finish()
-
-
-@dp.message_handler(state=states_.DialogueStates.DO_NOT_UNDERSTAND_1)
-async def why_do_not_understand(message: aiotypes.Message):
-    """
-    Получили описание, почему вопрос не понятен
-    """
-    if message.text != "Отмена":
-        pass  # TODO: записать что непонятного в вопросе
-
-    view = views.get_why_do_not_understand()
+    view = views.get_correct_answer(state_data["question_id"])
 
     await bot.send_message(
         text=view.text,
@@ -240,6 +254,7 @@ async def why_do_not_understand(message: aiotypes.Message):
     await states_.DialogueStates.next()
 
 
+@dp.message_handler(text="Решить другую задачу", state=states_.DialogueStates.GOT_ANSWER)
 @dp.message_handler(text="Решить другую задачу", state=states_.DialogueStates.DO_NOT_UNDERSTAND_2)
 async def get_another_question(message: aiotypes.Message, state: FSMContext):
     """
@@ -259,4 +274,4 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
     if view.question_id:
         await states_.DialogueStates.ASK_QUESTION.set()
     else:
-        await state.finish()
+        await states_.DialogueStates.NO_NEW_QUESTIONS.set()
