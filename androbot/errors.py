@@ -14,8 +14,6 @@ class BaseAppError(Exception):
         return "Нам жаль, но произошла непредвиденная ошибка. Пожалуйста, напишите @Ruppe об этом."
 
 
-
-
 class UserExistsException(BaseAppError):
     @property
     def response(self) -> str:
@@ -39,4 +37,16 @@ class NoNewQuestionsException(BaseAppError):
 
     @property
     def response(self) -> str:
-        return "Не осталось не отвеченных вопросов в базе"
+        return "Thera are no new questions"
+
+
+class TemplateNotFound(BaseAppError):
+    def __init__(self, message_text=None) -> None:
+        if not message_text:
+            message_text = self.response
+        super().__init__(message_text)
+        self.message_text = message_text
+
+    @property
+    def response(self) -> str:
+        return "Template file not found"
