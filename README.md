@@ -58,3 +58,9 @@ docker run --env-file .env --name androbot -d androbot
 docker attach androbot          # подключиться к приложению
 docker exec -ti androbot bash   # войти в bash
 ```
+
+**Запуск тестов**
+
+```
+pytest androbot/tests.py
+```
