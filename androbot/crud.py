@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 
 from . import models, schemas
-from .models import Answer, Question
+from .models import Answer, CurrentSession, EventsLog, Question, TelegramUser
+from .types.specialty import Specialty
 
 
 def get_user(db: Session, user_id: int):
@@ -27,10 +28,7 @@ def get_tg_user(db: Session, tg_user_id: int) -> models.TelegramUser:
 
 
 def is_tg_user_already_exist(db: Session, tg_user_id: int):
-    return (
-        db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).count()
-        > 0
-    )
+    return db.query(TelegramUser).filter(TelegramUser.tg_user_id == tg_user_id).count() > 0
 
 
 def create_tg_user(db: Session, user: schemas.TelegramUser):
@@ -41,6 +39,23 @@ def create_tg_user(db: Session, user: schemas.TelegramUser):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+def add_event(db: Session, event: schemas.EventsLog):
+    db_event = models.EventsLog(
+        tg_user_id=event.tg_user_id,
+        event_type=event.event_type.value,
+        datetime=event.datetime,
+        param1=event.param1,
+        param2=event.param2,
+        param3=event.param3,
+        param4=event.param4,
+        param5=event.param5,
+    )
+    db.add(db_event)
+    db.commit()
+    db.refresh(db_event)
+    return db_event
 
 
 def add_answer(db: Session, answer: schemas.Answer):
@@ -58,15 +73,18 @@ def add_answer(db: Session, answer: schemas.Answer):
 
 
 def add_question(db: Session, question: schemas.Question):
-    db_answer = models.Question(
-        quest_id=question.quest_id,
+    db_question = models.Question(
         question_type=question.question_type,
+        question_category=question.question_category,
         text_answer=question.text_answer,
+        text_question=question.text_question,
+        additional_info=question.additional_info,
     )
-    db.add(db_answer)
+    db.add(db_question)
     db.commit()
-    db.refresh(db_answer)
-    return db_answer
+    db.refresh(db_question)
+    question.id = db_question.id
+    return db_question
 
 
 def remove_tg_user(db: Session, tg_user_id: int):
@@ -76,6 +94,16 @@ def remove_tg_user(db: Session, tg_user_id: int):
 
 def remove_answers(db: Session, tg_user_id: int):
     db.query(Answer).filter(models.Answer.tg_user_id == tg_user_id).delete()
+    db.commit()
+
+
+def remove_sessions(db: Session, tg_user_id: int):
+    db.query(CurrentSession).filter(models.CurrentSession.tg_user_id == tg_user_id).delete()
+    db.commit()
+
+
+def remove_events(db: Session, tg_user_id: int):
+    db.query(EventsLog).filter(models.EventsLog.tg_user_id == tg_user_id).delete()
     db.commit()
 
 
@@ -109,26 +137,32 @@ def set_current_question(db: Session, tg_user_id: int, quest_id: int):
     return db_session
 
 
+def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty):
+    query = db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id)
+    if query.count() == 1:
+        db_session = query.first()
+        db_session.specialty = specialty.value
+        db.commit()
+        db.refresh(db_session)
+    db.close()
+
+
 def get_current_question(db: Session, tg_user_id: int):
-    session = (
-        db.query(models.CurrentSession)
-        .filter(models.CurrentSession.tg_user_id == tg_user_id)
-        .first()
-    )
+    session = db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
     return session.quest_id
 
 
 def get_all_questions(db: Session, specialty: str):
     return list(
         map(
-            lambda it: it.quest_id,
+            lambda it: it.id,
             db.query(models.Question).filter(models.Question.question_type == specialty).all(),
         )
     )
 
 
 def get_question(db: Session, quest_id: int) -> Question:
-    return db.query(models.Question).filter(models.Question.quest_id == quest_id).first()
+    return db.query(Question).filter(models.Question.id == quest_id).first()
 
 
 def create_user(db: Session, user: schemas.UserCreate):
