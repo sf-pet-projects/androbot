@@ -1,7 +1,14 @@
+import datetime
+
+from dateutil import tz
+
 from androbot.actions import Actions, get_main_menu, start_new_test
 from androbot.errors import UserExistsException, UserNotExistsException
-from androbot.schemas import Answer, Question, TelegramUser
-from androbot.specialty import Specialty
+from androbot.schemas import Answer, EventsLog, Question, TelegramUser
+from androbot.types.answerType import AnswerType
+from androbot.types.category import Category
+from androbot.types.event_types import Events
+from androbot.types.specialty import Specialty
 from androbot.utils import Utils
 
 
@@ -10,7 +17,7 @@ def test_get_main_menu():
 
 
 def test_start_new_test():
-    assert start_new_test() == ["voice", "text", "mental"]
+    assert start_new_test() == ["Текстом", "Голосом", "Мысленно"]
 
 
 def test_add_user():
@@ -62,55 +69,55 @@ def test_get_next_test():
         specialty=Specialty.FOR_TEST.value,
     )
     question1 = Question(
-        quest_id=Utils.get_random_number(5),
         question_type=Specialty.FOR_TEST.value,
+        question_category=Category.ACTIVITY.value,
+        text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
     question2 = Question(
-        quest_id=Utils.get_random_number(5),
         question_type=Specialty.FOR_TEST.value,
+        question_category=Category.GENERAL.value,
+        text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
     question3 = Question(
-        quest_id=Utils.get_random_number(5),
         question_type=Specialty.FOR_TEST.value,
+        question_category=Category.VIEW.value,
+        text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
+    Actions().add_user(user)
+    Actions().add_question(question1)
+    Actions().add_question(question2)
+    Actions().add_question(question3)
     answer1 = Answer(
-        answer_id=Utils.get_random_number(5),
-        quest_id=question1.quest_id,
+        quest_id=question1.id,
         tg_user_id=user.tg_user_id,
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
     )
     answer2 = Answer(
-        answer_id=Utils.get_random_number(5),
-        quest_id=question2.quest_id,
+        quest_id=question2.id,
         tg_user_id=user.tg_user_id,
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
     )
     answer3 = Answer(
-        answer_id=Utils.get_random_number(5),
-        quest_id=question1.quest_id,
+        quest_id=question1.id,
         tg_user_id=user.tg_user_id,
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
     )
-    Actions().add_user(user)
-    Actions().add_question(question1)
-    Actions().add_question(question2)
-    Actions().add_question(question3)
     Actions().add_answer(answer1)
     Actions().add_answer(answer2)
     Actions().add_answer(answer3)
     question = Actions().get_next_test(user.tg_user_id)
-    assert question.quest_id == question3.quest_id
-    Actions().remove_questions(Specialty.FOR_TEST.value)
+    assert question.id == question3.id
     Actions().remove_user(user)
+    Actions().remove_questions(Specialty.FOR_TEST.value)
 
 
 def test_get_test_result():
@@ -121,14 +128,37 @@ def test_get_test_result():
         specialty=Specialty.FOR_TEST.value,
     )
     question = Question(
-        quest_id=Utils.get_random_number(5),
         question_type=Specialty.FOR_TEST.value,
         text_answer=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
+        additional_info=Utils.get_random_text(10),
     )
     Actions().add_user(user)
     Actions().add_question(question)
     question = Actions().get_next_test(user.tg_user_id)
-    answer = Actions().get_test_result(user.tg_user_id)
-    assert answer == question.text_answer
+    right_answer = Actions().get_test_result(user.tg_user_id)
+    assert right_answer == question.text_answer
+    Actions().remove_user(user)
     Actions().remove_questions(Specialty.FOR_TEST.value)
+
+
+def test_add_event():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username=Utils.get_random_text(10),
+        specialty=Specialty.FOR_TEST.value,
+    )
+    Actions().add_user(user)
+    MSC = tz.gettz("Europe/Moscow")
+    event = EventsLog(
+        tg_user_id=user.tg_user_id,
+        event_type=Events.send_solution,
+        datetime=datetime.datetime.now(tz=MSC),
+        param1=Specialty.ANDROID.value,
+        param2=Utils.get_random_number(5),
+        param3=Utils.get_random_number(5),
+        param4=AnswerType.MENTAL.value,
+    )
+    Actions().add_event(event)
     Actions().remove_user(user)

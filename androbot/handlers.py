@@ -1,11 +1,33 @@
-from aiogram import types as aiotypes
+from csv import DictReader
 
-from . import states, views
-from .actions import Actions
-from .config import settings
+from aiogram import types as aiotypes
+from aiogram.dispatcher import FSMContext
+
+from . import schemas, views
+from .actions import Actions, start_new_test
 from .errors import UserExistsException
 from .main import bot, dp
-from .schemas import TelegramUser
+from .types import states_
+from .types.specialty import Specialty
+
+
+@dp.message_handler(commands=["add_question"], state="*")
+async def add_test_question(message):
+    """
+    Добавим вопросов из файла
+    """
+    FILE_PATH = "androbot_questions.csv"
+    with open(FILE_PATH, "r", encoding="utf-8-sig") as f:
+        reader = DictReader(f, delimiter=";")
+
+        for row in reader:
+            question = schemas.Question(
+                question_type=Specialty.ANDROID.value,
+                text_answer=row["Question"],
+            )
+
+            Actions().add_question(question)
+            await message.reply(question)
 
 
 @dp.message_handler(commands=["start"], state="*")
@@ -16,7 +38,7 @@ async def send_start_screen(message: aiotypes.Message):
     full_user_name = " ".join(
         [name for name in [message.from_user.first_name, message.from_user.last_name] if name]
     )
-    tg_user = TelegramUser(
+    tg_user = schemas.TelegramUser(
         tg_user_id=message.from_user.id,
         name=full_user_name,
         username=message.from_user.username,
@@ -25,7 +47,7 @@ async def send_start_screen(message: aiotypes.Message):
 
     try:
         Actions().add_user(tg_user)
-        view = views.get_hello_message(message)
+        view = views.get_hello_message(full_user_name)
         await bot.send_message(
             text=view.text,
             chat_id=message.chat.id,
@@ -36,10 +58,7 @@ async def send_start_screen(message: aiotypes.Message):
     except UserExistsException:
         pass
 
-    state = dp.current_state(user=tg_user.tg_user_id)
-    await state.set_state("main_menu")
-
-    view = views.get_main_menu(message)
+    view = views.get_main_menu()
 
     await bot.send_message(
         text=view.text,
@@ -48,17 +67,15 @@ async def send_start_screen(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
+    await states_.DialogueStates.MAIN_MENU.set()
 
-@dp.message_handler(text="Android Developer", state=states.DialogueStates.MAIN_MENU)
+
+@dp.message_handler(text="Android Developer", state=states_.DialogueStates.MAIN_MENU)
 async def show_android_developer_init(message: aiotypes.Message):
     """
     Обработчик для кнопки выбора специализации Android developer
     """
-
-    state = dp.current_state(user=message.from_user.id)
-    await state.set_state("android_developer_init_view")
-
-    view = views.get_android_developer_init_view(message)
+    view = views.get_android_developer_init_view()
 
     await bot.send_message(
         text=view.text,
@@ -67,16 +84,16 @@ async def show_android_developer_init(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
+    await states_.DialogueStates.next()
 
-@dp.message_handler(text="Готов!", state=states.DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+
+@dp.message_handler(text="Готов!", state=states_.DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
 async def show_select_answer_type(message: aiotypes.Message):
     """
     Предагаем выбрать вариант ответа
     """
-    state = dp.current_state(user=message.from_user.id)
-    await state.set_state("select_answer_type")
 
-    view = views.get_select_answer_type_view(message)
+    view = views.get_select_answer_type_view()
 
     await bot.send_message(
         text=view.text,
@@ -85,17 +102,18 @@ async def show_select_answer_type(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
+    await states_.DialogueStates.next()
 
-@dp.message_handler(text="Отмена", state=states.DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+
+@dp.message_handler(text="Отмена", state=states_.DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+@dp.message_handler(text="Главное меню", state=states_.DialogueStates.GOT_ANSWER)
+@dp.message_handler(text="Главное меню", state=states_.DialogueStates.NO_NEW_QUESTIONS)
+@dp.message_handler(text="Главное меню", state=states_.DialogueStates.DO_NOT_UNDERSTAND_2)
 async def back_to_main_menu(message: aiotypes.Message):
     """
     Возвращаемся в главное меню
     """
-
-    state = dp.current_state(user=message.from_user.id)
-    await state.set_state("main_menu")
-
-    view = views.get_main_menu(message)
+    view = views.get_main_menu()
 
     await bot.send_message(
         text=view.text,
@@ -104,37 +122,156 @@ async def back_to_main_menu(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
+    await states_.DialogueStates.MAIN_MENU.set()
 
-@dp.message_handler(state=states.DialogueStates.SELECT_ANSWER_TYPE)
-async def show_first_question(message: aiotypes.Message):
+
+@dp.message_handler(state=states_.DialogueStates.SELECT_ANSWER_TYPE)
+async def show_first_question(message: aiotypes.Message, state: FSMContext):
     """
     Проверяем что-за вариант ответа он выбрал.
     Если ОК, задаем первый вопрос.
     """
 
-    if message.text.lower() not in [x.lower() for x in settings.answers_types.split(",")]:
+    if message.text not in start_new_test():
         await message.reply("Ты выбрал некорректный вариант. Попробуй еще раз.", reply=False)
         return
 
-    state = dp.current_state(user=message.from_user.id)
-    await state.set_state("first_question")
+    await state.update_data(answer_type=message.text)
 
-    text_answer = "Ответьте на Главный вопрос жизни, Вселенной и всего такого."
+    view = views.get_next_question(message.from_user.id)
 
-    await bot.send_message(message.chat.id, text_answer)
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
 
+    await state.update_data(question_id=view.question_id)
 
-@dp.message_handler(state=states.DialogueStates.FIRST_QUESTION)
-async def check_first_question(message: aiotypes.Message):
-    """
-    Проверяем ответ на тестовый вопрос
-    """
-    user_answer = message.text
-
-    if user_answer == "42":
-        await message.reply("Да ты шаришь в теме")
-        state = dp.current_state(user=message.from_user.id)
-        await state.set_state("main_menu")
-
+    if view.question_id:
+        await states_.DialogueStates.next()
     else:
-        await message.reply("Неверно, подумайте еще!", reply=False)
+        await states_.DialogueStates.NO_NEW_QUESTIONS.set()
+
+
+@dp.message_handler(text="Далее", state=states_.DialogueStates.ASK_QUESTION)
+async def call_to_send_answer(message: aiotypes.Message, state: FSMContext):
+    """
+    Приглашаем написать ответ, если мысленно, то пусть просто нажмет ответил мысленно.
+    """
+    state_data = await state.get_data()
+
+    view = views.get_call_to_send_answer(state_data["answer_type"])
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await states_.DialogueStates.next()
+
+
+@dp.message_handler(text="Не понял вопрос", state=states_.DialogueStates.ASK_QUESTION)
+async def do_not_understand_question(message: aiotypes.Message):
+    """
+    Если нажал кнопку "Не понял вопрос"
+    """
+    view = views.get_do_not_understand_question()
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await states_.DialogueStates.DO_NOT_UNDERSTAND_1.set()
+
+
+@dp.message_handler(state=states_.DialogueStates.DO_NOT_UNDERSTAND_1)
+async def why_do_not_understand(message: aiotypes.Message):
+    """
+    Получили описание, почему вопрос не понятен
+    """
+    if message.text != "Отмена":
+        pass  # TODO: записать что непонятного в вопросе
+
+    view = views.get_why_do_not_understand()
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await states_.DialogueStates.next()
+
+
+@dp.message_handler(
+    content_types=[aiotypes.ContentType.TEXT, aiotypes.ContentType.VOICE],
+    state=[states_.DialogueStates.ASK_QUESTION, states_.DialogueStates.CALL_TO_SEND_ANSWER],
+)
+async def get_answer(message: aiotypes.Message, state: FSMContext):
+    """
+    Читает ответ пользователя
+    """
+    state_data = await state.get_data()
+    voice_id = None
+    if message.text == "Ответил мысленно":
+        answer_type = "Мысленно"
+    elif message.content_type == aiotypes.ContentType.VOICE:
+        answer_type = "Голосом"
+        voice_id = message.voice.file_id
+    elif message.content_type == aiotypes.ContentType.TEXT:
+        answer_type = "Текстом"
+    else:
+        await message.reply("Такой ответ мы не принимаем! Напиши текстом, или продиктуй!")
+        return
+
+    answer = schemas.Answer(
+        quest_id=state_data["question_id"],
+        tg_user_id=message.from_user.id,
+        answer_type=answer_type,
+        text_answer=message.text,
+        link_to_audio_answer=voice_id,
+    )
+
+    Actions().add_answer(answer)
+
+    view = views.get_correct_answer(state_data["question_id"])
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await states_.DialogueStates.next()
+
+
+@dp.message_handler(text="Решить другую задачу", state=states_.DialogueStates.GOT_ANSWER)
+@dp.message_handler(text="Решить другую задачу", state=states_.DialogueStates.DO_NOT_UNDERSTAND_2)
+async def get_another_question(message: aiotypes.Message, state: FSMContext):
+    """
+    Выдать пользователю задачу
+    """
+    view = views.get_next_question(message.from_user.id)
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await state.update_data(question_id=view.question_id)
+
+    if view.question_id:
+        await states_.DialogueStates.ASK_QUESTION.set()
+    else:
+        await states_.DialogueStates.NO_NEW_QUESTIONS.set()

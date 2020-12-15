@@ -2,13 +2,14 @@ import random
 
 from loguru import logger
 
+from androbot.types.answerType import AnswerType
+from androbot.types.specialty import Specialty
+
 from . import crud, schemas
-from .config import settings
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
-from .errors import UserExistsException, UserNotExistsException
+from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
 from .models import Question
-from .specialty import Specialty
 
 
 def get_main_menu():
@@ -16,11 +17,10 @@ def get_main_menu():
 
 
 def start_new_test():
-    return list(map(lambda x: x.strip(), settings.answers_types.split(",")))
+    return [e.value for e in AnswerType]
 
 
 class Actions:
-
     db = SessionLocal()
 
     def add_user(self, tg_user: schemas.TelegramUser):
@@ -34,6 +34,8 @@ class Actions:
 
     def remove_user(self, tg_user: schemas.TelegramUser):
         if is_tg_user_already_exist(self.db, tg_user.tg_user_id):
+            crud.remove_events(self.db, tg_user.tg_user_id)
+            crud.remove_sessions(self.db, tg_user.tg_user_id)
             crud.remove_answers(self.db, tg_user.tg_user_id)
             crud.remove_tg_user(self.db, tg_user.tg_user_id)
             logger.info(
@@ -45,6 +47,11 @@ class Actions:
             )
         else:
             raise UserNotExistsException("You try to remove doesn't exist user")
+        self.db.close()
+
+    def add_event(self, event: schemas.EventsLog):
+        crud.add_event(self.db, event)
+        logger.info("Add event {}", event)
         self.db.close()
 
     def add_question(self, question: schemas.Question):
@@ -68,7 +75,11 @@ class Actions:
         tg_user = crud.get_tg_user(self.db, tg_user_id)
         passed_questions = crud.get_passed_questions(self.db, tg_user_id)
         all_question = crud.get_all_questions(self.db, tg_user.specialty)
-        next_quest_id = random.choice(list(set(all_question) - set(passed_questions)))
+        new_questions = list(set(all_question) - set(passed_questions))
+        if not new_questions:
+            raise NoNewQuestionsException
+
+        next_quest_id = random.choice(new_questions)
         crud.set_current_question(self.db, tg_user_id, next_quest_id)
         next_quest = get_question(self.db, next_quest_id)
         self.db.close()
@@ -79,3 +90,10 @@ class Actions:
         quest = get_question(self.db, quest_id)
         self.db.close()
         return quest.text_answer
+
+    def edit_specialty(self, tg_user_id: int, new_specialty: Specialty):
+        if is_tg_user_already_exist(self.db, tg_user_id):
+            crud.edit_specialty(self.db, tg_user_id, new_specialty)
+        else:
+            raise UserNotExistsException("You try to add specialty for not exist user")
+        self.db.close()
