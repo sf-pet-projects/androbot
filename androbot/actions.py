@@ -9,7 +9,7 @@ from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
 from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
-from .models import Question
+from .models import Question, TelegramUser
 
 
 def get_main_menu():
@@ -23,7 +23,7 @@ def start_new_test():
 class Actions:
     db = SessionLocal()
 
-    def add_user(self, tg_user: schemas.TelegramUser):
+    def add_user(self, tg_user: schemas.TelegramUser) -> TelegramUser:
         if is_tg_user_already_exist(self.db, tg_user.tg_user_id):
             raise UserExistsException("You try to add already exists user")
         else:
@@ -54,19 +54,19 @@ class Actions:
         logger.info("Add event {}", event)
         self.db.close()
 
-    def add_question(self, question: schemas.Question):
+    def add_question(self, question: schemas.Question) -> TelegramUser:
         db_user = crud.add_question(self.db, question)
         logger.info("Add question {}", question)
         self.db.close()
         return db_user
 
-    def add_answer(self, answer: schemas.Answer):
+    def add_answer(self, answer: schemas.Answer) -> TelegramUser:
         db_user = crud.add_answer(self.db, answer)
         logger.info("Add new user's answer {}", answer)
         self.db.close()
         return db_user
 
-    def remove_questions(self, specialty: str):
+    def remove_questions(self, specialty: str) -> TelegramUser:
         db_user = crud.remove_questions(self.db, specialty)
         self.db.close()
         return db_user
@@ -74,8 +74,11 @@ class Actions:
     def get_next_test(self, tg_user_id: int) -> Question:
         tg_user = crud.get_tg_user(self.db, tg_user_id)
         passed_questions = crud.get_passed_questions(self.db, tg_user_id)
+        logger.warning(passed_questions)
         all_question = crud.get_all_questions(self.db, tg_user.specialty)
+        logger.warning(all_question)
         new_questions = list(set(all_question) - set(passed_questions))
+        logger.warning(new_questions)
         if not new_questions:
             raise NoNewQuestionsException
 
