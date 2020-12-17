@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -13,25 +15,23 @@ def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
 
 
-def get_users(db: Session, skip: int = 0, limit: int = 100):
+def get_users(db: Session, skip: int = 0, limit: int = 100) -> List:
     return db.query(models.User).offset(skip).limit(limit).all()
 
 
-def get_tg_users(db: Session, skip: int = 0):
+def get_tg_users(db: Session, skip: int = 0) -> List:
     return db.query(models.TelegramUser).offset(skip).all()
 
 
 def get_tg_user(db: Session, tg_user_id: int) -> models.TelegramUser:
-    return (
-        db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).first()
-    )
+    return db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).first()
 
 
-def is_tg_user_already_exist(db: Session, tg_user_id: int):
+def is_tg_user_already_exist(db: Session, tg_user_id: int) -> bool:
     return db.query(TelegramUser).filter(TelegramUser.tg_user_id == tg_user_id).count() > 0
 
 
-def create_tg_user(db: Session, user: schemas.TelegramUser):
+def create_tg_user(db: Session, user: schemas.TelegramUser) -> TelegramUser:
     db_user = models.TelegramUser(
         tg_user_id=user.tg_user_id, name=user.name, username=user.username, specialty=user.specialty
     )
@@ -41,7 +41,7 @@ def create_tg_user(db: Session, user: schemas.TelegramUser):
     return db_user
 
 
-def add_event(db: Session, event: schemas.EventsLog):
+def add_event(db: Session, event: schemas.EventsLog) -> EventsLog:
     db_event = models.EventsLog(
         tg_user_id=event.tg_user_id,
         event_type=event.event_type.value,
@@ -58,7 +58,7 @@ def add_event(db: Session, event: schemas.EventsLog):
     return db_event
 
 
-def add_answer(db: Session, answer: schemas.Answer):
+def add_answer(db: Session, answer: schemas.Answer) -> Answer:
     db_answer = models.Answer(
         quest_id=answer.quest_id,
         tg_user_id=answer.tg_user_id,
@@ -72,7 +72,7 @@ def add_answer(db: Session, answer: schemas.Answer):
     return db_answer
 
 
-def add_question(db: Session, question: schemas.Question):
+def add_question(db: Session, question: schemas.Question) -> Question:
     db_question = models.Question(
         question_type=question.question_type,
         question_category=question.question_category,
@@ -112,16 +112,11 @@ def remove_questions(db: Session, specialty: str):
     db.commit()
 
 
-def get_passed_questions(db: Session, tg_user_id: int):
-    return list(
-        map(
-            lambda it: it.quest_id,
-            db.query(models.Answer).filter(models.Answer.tg_user_id == tg_user_id).all(),
-        )
-    )
+def get_passed_questions(db: Session, tg_user_id: int) -> List:
+    return db.query(models.Answer.id).filter(models.Answer.tg_user_id == tg_user_id).all()
 
 
-def set_current_question(db: Session, tg_user_id: int, quest_id: int):
+def set_current_question(db: Session, tg_user_id: int, quest_id: int) -> Session:
     query = db.query(models.CurrentSession).filter(models.CurrentSession.tg_user_id == tg_user_id)
     if query.count() == 1:
         db_session = query.first()
@@ -147,18 +142,13 @@ def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty):
     db.close()
 
 
-def get_current_question(db: Session, tg_user_id: int):
+def get_current_question(db: Session, tg_user_id: int) -> int:
     session = db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
     return session.quest_id
 
 
-def get_all_questions(db: Session, specialty: str):
-    return list(
-        map(
-            lambda it: it.id,
-            db.query(models.Question).filter(models.Question.question_type == specialty).all(),
-        )
-    )
+def get_all_questions(db: Session, specialty: str) -> List:
+    return db.query(models.Question.id).filter(models.Question.question_type == specialty).all()
 
 
 def get_question(db: Session, quest_id: int) -> Question:
