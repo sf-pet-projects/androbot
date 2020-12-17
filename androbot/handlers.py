@@ -14,7 +14,7 @@ from .types.specialty import Specialty
 @dp.message_handler(commands=["add_question"], state="*")
 async def add_test_question(message):
     """
-    Добавим вопросов из файла
+    Добавим вопросов из файла, это блок для тестирования, добавлять его в прод. не нужно
     """
     FILE_PATH = "androbot_questions.csv"
     with open(FILE_PATH, "r", encoding="utf-8-sig") as f:
@@ -132,7 +132,8 @@ async def show_first_question(message: aiotypes.Message, state: FSMContext):
     Если ОК, задаем первый вопрос.
     """
 
-    if message.text not in start_new_test():
+    message_text_lower = message.text.lower()
+    if all(message_text_lower != x.lower() for x in start_new_test()):
         await message.reply("Ты выбрал некорректный вариант. Попробуй еще раз.", reply=False)
         return
 

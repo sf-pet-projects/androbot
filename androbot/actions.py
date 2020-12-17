@@ -9,7 +9,7 @@ from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
 from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
-from .models import Question, TelegramUser
+from .models import Question
 
 
 def get_main_menu():
@@ -66,7 +66,7 @@ class Actions:
         self.db.close()
         return db_user
 
-    def remove_questions(self, specialty: str) -> TelegramUser:
+    def remove_questions(self, specialty: str):
         db_user = crud.remove_questions(self.db, specialty)
         self.db.close()
         return db_user
