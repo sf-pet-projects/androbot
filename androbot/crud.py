@@ -4,22 +4,10 @@ from sqlalchemy.orm import Session
 
 from . import models, schemas
 from .models import Answer, CurrentSession, EventsLog, Question, TelegramUser
-from .types.specialty import Specialty
+from .types_.specialty_ import Specialty
 
 
-def get_user(db: Session, user_id: int):
-    return db.query(models.User).filter(models.User.id == user_id).first()
-
-
-def get_user_by_email(db: Session, email: str):
-    return db.query(models.User).filter(models.User.email == email).first()
-
-
-def get_users(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.User).offset(skip).limit(limit).all()
-
-
-def get_tg_users(db: Session, skip: int = 0) -> List:
+def get_tg_users(db: Session, skip: int = 0) -> List[TelegramUser]:
     return db.query(models.TelegramUser).offset(skip).all()
 
 
@@ -89,32 +77,32 @@ def add_question(db: Session, question: schemas.Question) -> Question:
     return db_question
 
 
-def remove_tg_user(db: Session, tg_user_id: int):
+def remove_tg_user(db: Session, tg_user_id: int) -> None:
     db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).delete()
     db.commit()
 
 
-def remove_answers(db: Session, tg_user_id: int):
+def remove_answers(db: Session, tg_user_id: int) -> None:
     db.query(Answer).filter(models.Answer.tg_user_id == tg_user_id).delete()
     db.commit()
 
 
-def remove_sessions(db: Session, tg_user_id: int):
+def remove_sessions(db: Session, tg_user_id: int) -> None:
     db.query(CurrentSession).filter(models.CurrentSession.tg_user_id == tg_user_id).delete()
     db.commit()
 
 
-def remove_events(db: Session, tg_user_id: int):
+def remove_events(db: Session, tg_user_id: int) -> None:
     db.query(EventsLog).filter(models.EventsLog.tg_user_id == tg_user_id).delete()
     db.commit()
 
 
-def remove_questions(db: Session, specialty: str):
+def remove_questions(db: Session, specialty: str) -> None:
     db.query(Question).filter(models.Question.question_type == specialty).delete()
     db.commit()
 
 
-def get_passed_questions(db: Session, tg_user_id: int) -> List:
+def get_passed_questions(db: Session, tg_user_id: int) -> List[int]:
     return db.query(models.Answer.quest_id).filter(models.Answer.tg_user_id == tg_user_id).all()
 
 
@@ -134,7 +122,7 @@ def set_current_question(db: Session, tg_user_id: int, quest_id: int) -> Session
     return db_session
 
 
-def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty):
+def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty) -> None:
     query = db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id)
     if query.count() == 1:
         db_session = query.first()
@@ -149,30 +137,9 @@ def get_current_question(db: Session, tg_user_id: int) -> int:
     return session.quest_id
 
 
-def get_all_questions(db: Session, specialty: str) -> List:
+def get_all_questions(db: Session, specialty: str) -> List[Question]:
     return db.query(models.Question.id).filter(models.Question.question_type == specialty).all()
 
 
 def get_question(db: Session, quest_id: int) -> Question:
     return db.query(Question).filter(models.Question.id == quest_id).first()
-
-
-def create_user(db: Session, user: schemas.UserCreate):
-    fake_hashed_password = user.password + "notreallyhashed"
-    db_user = models.User(email=user.email, hashed_password=fake_hashed_password)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-
-def get_items(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Item).offset(skip).limit(limit).all()
-
-
-def create_user_item(db: Session, item: schemas.ItemCreate, user_id: int):
-    db_item = models.Item(**item.dict(), owner_id=user_id)
-    db.add(db_item)
-    db.commit()
-    db.refresh(db_item)
-    return db_item

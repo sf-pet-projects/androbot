@@ -2,6 +2,10 @@ from enum import Enum
 
 
 class Events(Enum):
+    """
+    Типы событий
+    """
+
     registration = "registration"
     start = "start"
     profile = "profile"

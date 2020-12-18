@@ -7,8 +7,8 @@ from . import schemas, views
 from .actions import Actions, start_new_test
 from .errors import UserExistsException
 from .main import bot, dp
-from .types import states_
-from .types.specialty import Specialty
+from .types_ import states_
+from .types_.specialty_ import Specialty
 
 
 @dp.message_handler(commands=["add_question"], state="*")

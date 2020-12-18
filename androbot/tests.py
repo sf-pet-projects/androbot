@@ -5,10 +5,10 @@ from dateutil import tz
 from androbot.actions import Actions, get_main_menu, start_new_test
 from androbot.errors import UserExistsException, UserNotExistsException
 from androbot.schemas import Answer, EventsLog, Question, TelegramUser
-from androbot.types.answerType import AnswerType
-from androbot.types.category import Category
-from androbot.types.event_types import Events
-from androbot.types.specialty import Specialty
+from androbot.types_.answer_ import Answers
+from androbot.types_.category_ import Category
+from androbot.types_.event_ import Events
+from androbot.types_.specialty_ import Specialty
 from androbot.utils import Utils
 
 
@@ -158,7 +158,7 @@ def test_add_event():
         param1=Specialty.ANDROID.value,
         param2=Utils.get_random_number(5),
         param3=Utils.get_random_number(5),
-        param4=AnswerType.MENTAL.value,
+        param4=Answers.MENTAL.value,
     )
     Actions().add_event(event)
     Actions().remove_user(user)

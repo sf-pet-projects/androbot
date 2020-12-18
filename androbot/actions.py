@@ -1,9 +1,10 @@
 import random
+from typing import List
 
 from loguru import logger
 
-from androbot.types.answerType import AnswerType
-from androbot.types.specialty import Specialty
+from androbot.types_.answer_ import Answers
+from androbot.types_.specialty_ import Specialty
 
 from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
@@ -12,12 +13,12 @@ from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsE
 from .models import Question, TelegramUser
 
 
-def get_main_menu():
+def get_main_menu() -> List[str]:
     return [e.value for e in Specialty]
 
 
-def start_new_test():
-    return [e.value for e in AnswerType]
+def start_new_test() -> List[str]:
+    return [e.value for e in Answers]
 
 
 class Actions:
@@ -32,7 +33,7 @@ class Actions:
         self.db.close()
         return db_user
 
-    def remove_user(self, tg_user: schemas.TelegramUser):
+    def remove_user(self, tg_user: schemas.TelegramUser) -> None:
         if is_tg_user_already_exist(self.db, tg_user.tg_user_id):
             crud.remove_events(self.db, tg_user.tg_user_id)
             crud.remove_sessions(self.db, tg_user.tg_user_id)
@@ -49,7 +50,7 @@ class Actions:
             raise UserNotExistsException("You try to remove doesn't exist user")
         self.db.close()
 
-    def add_event(self, event: schemas.EventsLog):
+    def add_event(self, event: schemas.EventsLog) -> None:
         crud.add_event(self.db, event)
         logger.info("Add event {}", event)
         self.db.close()
@@ -66,10 +67,9 @@ class Actions:
         self.db.close()
         return db_user
 
-    def remove_questions(self, specialty: str) -> TelegramUser:
-        db_user = crud.remove_questions(self.db, specialty)
+    def remove_questions(self, specialty: str) -> None:
+        crud.remove_questions(self.db, specialty)
         self.db.close()
-        return db_user
 
     def get_next_test(self, tg_user_id: int) -> Question:
         tg_user = crud.get_tg_user(self.db, tg_user_id)
@@ -94,7 +94,7 @@ class Actions:
         self.db.close()
         return quest.text_answer
 
-    def edit_specialty(self, tg_user_id: int, new_specialty: Specialty):
+    def edit_specialty(self, tg_user_id: int, new_specialty: Specialty) -> None:
         if is_tg_user_already_exist(self.db, tg_user_id):
             crud.edit_specialty(self.db, tg_user_id, new_specialty)
         else:

@@ -1,7 +1,11 @@
 from enum import Enum
 
 
-class AnswerType(Enum):
+class Answers(Enum):
+    """
+    Типы ответов
+    """
+
     TEXT = "Текстом"
     VOICE = "Голосом"
     MENTAL = "Мысленно"

@@ -3,7 +3,7 @@ import aiogram.types as aiotypes
 from . import actions
 from .errors import NoNewQuestionsException
 from .templates import get_template, render_message
-from .types_ import View
+from .types_.views_ import View
 
 
 def get_main_menu() -> View:
