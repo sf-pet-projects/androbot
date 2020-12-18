@@ -22,7 +22,14 @@ def start_new_test() -> List[str]:
 
 
 class Actions:
-    db = SessionLocal()
+    def __init__(self) -> None:
+        self.db = SessionLocal()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.db.close()
 
     def add_user(self, tg_user: schemas.TelegramUser) -> TelegramUser:
         if is_tg_user_already_exist(self.db, tg_user.tg_user_id):
@@ -30,7 +37,6 @@ class Actions:
         else:
             db_user = crud.create_tg_user(self.db, tg_user)
             logger.info("Add new telegram user {}", tg_user)
-        self.db.close()
         return db_user
 
     def remove_user(self, tg_user: schemas.TelegramUser) -> None:
@@ -48,28 +54,23 @@ class Actions:
             )
         else:
             raise UserNotExistsException("You try to remove doesn't exist user")
-        self.db.close()
 
     def add_event(self, event: schemas.EventsLog) -> None:
         crud.add_event(self.db, event)
         logger.info("Add event {}", event)
-        self.db.close()
 
     def add_question(self, question: schemas.Question) -> TelegramUser:
         db_user = crud.add_question(self.db, question)
         logger.info("Add question {}", question)
-        self.db.close()
         return db_user
 
     def add_answer(self, answer: schemas.Answer) -> TelegramUser:
         db_user = crud.add_answer(self.db, answer)
         logger.info("Add new user's answer {}", answer)
-        self.db.close()
         return db_user
 
     def remove_questions(self, specialty: str) -> None:
         crud.remove_questions(self.db, specialty)
-        self.db.close()
 
     def get_next_test(self, tg_user_id: int) -> Question:
         tg_user = crud.get_tg_user(self.db, tg_user_id)
@@ -85,13 +86,11 @@ class Actions:
         next_quest_id = random.choice(new_questions)
         crud.set_current_question(self.db, tg_user_id, next_quest_id)
         next_quest = get_question(self.db, next_quest_id)
-        self.db.close()
         return next_quest
 
     def get_test_result(self, tg_user_id: int) -> str:
         quest_id = crud.get_current_question(self.db, tg_user_id)
         quest = get_question(self.db, quest_id)
-        self.db.close()
         return quest.text_answer
 
     def edit_specialty(self, tg_user_id: int, new_specialty: Specialty) -> None:
@@ -99,4 +98,3 @@ class Actions:
             crud.edit_specialty(self.db, tg_user_id, new_specialty)
         else:
             raise UserNotExistsException("You try to add specialty for not exist user")
-        self.db.close()
