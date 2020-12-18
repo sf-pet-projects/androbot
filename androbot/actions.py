@@ -1,3 +1,4 @@
+import csv
 import random
 from typing import List
 
@@ -98,3 +99,21 @@ class Actions:
             crud.edit_specialty(self.db, tg_user_id, new_specialty)
         else:
             raise UserNotExistsException("You try to add specialty for not exist user")
+
+    def load_questions(self, specialty: Specialty, file: str):
+        with open(file, encoding="utf-8") as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=";")
+            line_count = 0
+            for row in csv_reader:
+                if line_count == 0:
+                    line_count += 1
+                    continue
+                self.add_question(
+                    Question(
+                        question_type=specialty.value,
+                        question_category=row[0],
+                        text_question=row[1],
+                        text_answer=row[2],
+                        additional_info=row[3],
+                    )
+                )

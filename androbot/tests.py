@@ -6,7 +6,6 @@ from androbot.actions import Actions, get_main_menu, start_new_test
 from androbot.errors import UserExistsException, UserNotExistsException
 from androbot.schemas import Answer, EventsLog, Question, TelegramUser
 from androbot.types_.answer_ import Answers
-from androbot.types_.category_ import Category
 from androbot.types_.event_ import Events
 from androbot.types_.specialty_ import Specialty
 from androbot.utils import Utils
@@ -70,19 +69,19 @@ def test_get_next_test():
     )
     question1 = Question(
         question_type=Specialty.FOR_TEST.value,
-        question_category=Category.ACTIVITY.value,
+        question_category=Utils.get_random_text(10),
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
     question2 = Question(
         question_type=Specialty.FOR_TEST.value,
-        question_category=Category.GENERAL.value,
+        question_category=Utils.get_random_text(10),
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
     question3 = Question(
         question_type=Specialty.FOR_TEST.value,
-        question_category=Category.VIEW.value,
+        question_category=Utils.get_random_text(10),
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
