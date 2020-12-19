@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from . import models, schemas
 from .models import Answer, CurrentSession, EventsLog, Question, TelegramUser
-from .types_.specialty_ import Specialty
+from .types_ import Specialty
 
 
 def get_tg_users(db: Session, skip: int = 0) -> List[TelegramUser]:

@@ -4,14 +4,12 @@ from typing import List
 
 from loguru import logger
 
-from androbot.types_.answer_ import Answers
-from androbot.types_.specialty_ import Specialty
-
 from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
 from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
 from .models import Question, TelegramUser
+from .types_ import Answers, Specialty
 
 
 def get_main_menu() -> List[str]:
@@ -82,7 +80,7 @@ class Actions:
         new_questions = list(set(all_question) - set(passed_questions))
         logger.warning(new_questions)
         if not new_questions:
-            raise NoNewQuestionsException
+            raise NoNewQuestionsException("All questions was answered")
 
         next_quest_id = random.choice(new_questions)
         crud.set_current_question(self.db, tg_user_id, next_quest_id)

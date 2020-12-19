@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic.schema import datetime
 
-from androbot.types_.event_ import Events
+from .types_ import Events
 
 
 class TelegramUserBase(BaseModel):
