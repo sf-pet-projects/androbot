@@ -1,5 +1,3 @@
-from csv import DictReader
-
 from aiogram import types as aiotypes
 from aiogram.dispatcher import FSMContext
 
@@ -7,26 +5,7 @@ from . import schemas, views
 from .actions import Actions, start_new_test
 from .errors import UserExistsException
 from .main import bot, dp
-from .types_ import DialogueStates, Specialty
-
-
-@dp.message_handler(commands=["add_question"], state="*")
-async def add_test_question(message):
-    """
-    Добавим вопросов из файла, это блок для тестирования, добавлять его в прод. не нужно
-    """
-    FILE_PATH = "androbot_questions.csv"
-    with open(FILE_PATH, "r", encoding="utf-8-sig") as f:
-        reader = DictReader(f, delimiter=";")
-
-        for row in reader:
-            question = schemas.Question(
-                question_type=Specialty.ANDROID.value,
-                text_answer=row["Question"],
-            )
-
-            Actions().add_question(question)
-            await message.reply(question)
+from .types_ import DialogueStates
 
 
 @dp.message_handler(commands=["start"], state="*")
@@ -45,7 +24,8 @@ async def send_start_screen(message: aiotypes.Message):
     )
 
     try:
-        Actions().add_user(tg_user)
+        with Actions() as act:
+            act.add_user(tg_user)
         view = views.get_hello_message(full_user_name)
         await bot.send_message(
             text=view.text,
@@ -240,9 +220,10 @@ async def get_answer(message: aiotypes.Message, state: FSMContext):
         link_to_audio_answer=voice_id,
     )
 
-    Actions().add_answer(answer)
+    with Actions() as act:
+        act.add_answer(answer)
 
-    view = views.get_correct_answer(state_data["question_id"])
+    view = views.get_correct_answer(message.from_user.id)
 
     await bot.send_message(
         text=view.text,
