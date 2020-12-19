@@ -80,7 +80,7 @@ class Actions:
         new_questions = list(set(all_question) - set(passed_questions))
         logger.warning(new_questions)
         if not new_questions:
-            raise NoNewQuestionsException("All questions was answered")
+            raise NoNewQuestionsException("All questions were answered")
 
         next_quest_id = random.choice(new_questions)
         crud.set_current_question(self.db, tg_user_id, next_quest_id)
