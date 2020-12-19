@@ -39,6 +39,14 @@ poetry run pre-commit
 - `TG_API_TOKEN` - API токен бота [как его получить](https://habr.com/ru/post/262247/).    
 
 
+**Инициализация базы данных**  
+
+Перед первым запуском нужно загрузить вопросы в бота. Это делается с помощью команды:
+```
+poerty run python3 androbot\load_questions.py path_to_csv_file_with_questions.csv
+```
+
+
 **Запуск**  
 
 ```

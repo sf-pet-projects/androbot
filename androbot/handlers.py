@@ -1,5 +1,3 @@
-from csv import DictReader
-
 from aiogram import types as aiotypes
 from aiogram.dispatcher import FSMContext
 
@@ -7,27 +5,7 @@ from . import schemas, views
 from .actions import Actions, start_new_test
 from .errors import UserExistsException
 from .main import bot, dp
-from .types_ import states_
-from .types_.specialty_ import Specialty
-
-
-@dp.message_handler(commands=["add_question"], state="*")
-async def add_test_question(message):
-    """
-    Добавим вопросов из файла, это блок для тестирования, добавлять его в прод. не нужно
-    """
-    FILE_PATH = "androbot_questions.csv"
-    with open(FILE_PATH, "r", encoding="utf-8-sig") as f:
-        reader = DictReader(f, delimiter=";")
-
-        for row in reader:
-            question = schemas.Question(
-                question_type=Specialty.ANDROID.value,
-                text_answer=row["Question"],
-            )
-
-            Actions().add_question(question)
-            await message.reply(question)
+from .types_ import DialogueStates
 
 
 @dp.message_handler(commands=["start"], state="*")
@@ -46,7 +24,8 @@ async def send_start_screen(message: aiotypes.Message):
     )
 
     try:
-        Actions().add_user(tg_user)
+        with Actions() as act:
+            act.add_user(tg_user)
         view = views.get_hello_message(full_user_name)
         await bot.send_message(
             text=view.text,
@@ -67,10 +46,10 @@ async def send_start_screen(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
-    await states_.DialogueStates.MAIN_MENU.set()
+    await DialogueStates.MAIN_MENU.set()
 
 
-@dp.message_handler(text="Android Developer", state=states_.DialogueStates.MAIN_MENU)
+@dp.message_handler(text="Android Developer", state=DialogueStates.MAIN_MENU)
 async def show_android_developer_init(message: aiotypes.Message):
     """
     Обработчик для кнопки выбора специализации Android developer
@@ -84,10 +63,10 @@ async def show_android_developer_init(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
-    await states_.DialogueStates.next()
+    await DialogueStates.next()
 
 
-@dp.message_handler(text="Готов!", state=states_.DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+@dp.message_handler(text="Готов!", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
 async def show_select_answer_type(message: aiotypes.Message):
     """
     Предагаем выбрать вариант ответа
@@ -102,13 +81,13 @@ async def show_select_answer_type(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
-    await states_.DialogueStates.next()
+    await DialogueStates.next()
 
 
-@dp.message_handler(text="Отмена", state=states_.DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
-@dp.message_handler(text="Главное меню", state=states_.DialogueStates.GOT_ANSWER)
-@dp.message_handler(text="Главное меню", state=states_.DialogueStates.NO_NEW_QUESTIONS)
-@dp.message_handler(text="Главное меню", state=states_.DialogueStates.DO_NOT_UNDERSTAND_2)
+@dp.message_handler(text="Отмена", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+@dp.message_handler(text="Главное меню", state=DialogueStates.GOT_ANSWER)
+@dp.message_handler(text="Главное меню", state=DialogueStates.NO_NEW_QUESTIONS)
+@dp.message_handler(text="Главное меню", state=DialogueStates.DO_NOT_UNDERSTAND_2)
 async def back_to_main_menu(message: aiotypes.Message):
     """
     Возвращаемся в главное меню
@@ -122,10 +101,10 @@ async def back_to_main_menu(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
-    await states_.DialogueStates.MAIN_MENU.set()
+    await DialogueStates.MAIN_MENU.set()
 
 
-@dp.message_handler(state=states_.DialogueStates.SELECT_ANSWER_TYPE)
+@dp.message_handler(state=DialogueStates.SELECT_ANSWER_TYPE)
 async def show_first_question(message: aiotypes.Message, state: FSMContext):
     """
     Проверяем что-за вариант ответа он выбрал.
@@ -151,12 +130,12 @@ async def show_first_question(message: aiotypes.Message, state: FSMContext):
     await state.update_data(question_id=view.question_id)
 
     if view.question_id:
-        await states_.DialogueStates.next()
+        await DialogueStates.next()
     else:
-        await states_.DialogueStates.NO_NEW_QUESTIONS.set()
+        await DialogueStates.NO_NEW_QUESTIONS.set()
 
 
-@dp.message_handler(text="Далее", state=states_.DialogueStates.ASK_QUESTION)
+@dp.message_handler(text="Далее", state=DialogueStates.ASK_QUESTION)
 async def call_to_send_answer(message: aiotypes.Message, state: FSMContext):
     """
     Приглашаем написать ответ, если мысленно, то пусть просто нажмет ответил мысленно.
@@ -172,10 +151,10 @@ async def call_to_send_answer(message: aiotypes.Message, state: FSMContext):
         reply_markup=view.markup,
     )
 
-    await states_.DialogueStates.next()
+    await DialogueStates.next()
 
 
-@dp.message_handler(text="Не понял вопрос", state=states_.DialogueStates.ASK_QUESTION)
+@dp.message_handler(text="Не понял вопрос", state=DialogueStates.ASK_QUESTION)
 async def do_not_understand_question(message: aiotypes.Message):
     """
     Если нажал кнопку "Не понял вопрос"
@@ -189,10 +168,10 @@ async def do_not_understand_question(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
-    await states_.DialogueStates.DO_NOT_UNDERSTAND_1.set()
+    await DialogueStates.DO_NOT_UNDERSTAND_1.set()
 
 
-@dp.message_handler(state=states_.DialogueStates.DO_NOT_UNDERSTAND_1)
+@dp.message_handler(state=DialogueStates.DO_NOT_UNDERSTAND_1)
 async def why_do_not_understand(message: aiotypes.Message):
     """
     Получили описание, почему вопрос не понятен
@@ -209,12 +188,12 @@ async def why_do_not_understand(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
-    await states_.DialogueStates.next()
+    await DialogueStates.next()
 
 
 @dp.message_handler(
     content_types=[aiotypes.ContentType.TEXT, aiotypes.ContentType.VOICE],
-    state=[states_.DialogueStates.ASK_QUESTION, states_.DialogueStates.CALL_TO_SEND_ANSWER],
+    state=[DialogueStates.ASK_QUESTION, DialogueStates.CALL_TO_SEND_ANSWER],
 )
 async def get_answer(message: aiotypes.Message, state: FSMContext):
     """
@@ -241,9 +220,10 @@ async def get_answer(message: aiotypes.Message, state: FSMContext):
         link_to_audio_answer=voice_id,
     )
 
-    Actions().add_answer(answer)
+    with Actions() as act:
+        act.add_answer(answer)
 
-    view = views.get_correct_answer(state_data["question_id"])
+    view = views.get_correct_answer(message.from_user.id)
 
     await bot.send_message(
         text=view.text,
@@ -252,11 +232,11 @@ async def get_answer(message: aiotypes.Message, state: FSMContext):
         reply_markup=view.markup,
     )
 
-    await states_.DialogueStates.next()
+    await DialogueStates.next()
 
 
-@dp.message_handler(text="Решить другую задачу", state=states_.DialogueStates.GOT_ANSWER)
-@dp.message_handler(text="Решить другую задачу", state=states_.DialogueStates.DO_NOT_UNDERSTAND_2)
+@dp.message_handler(text="Решить другую задачу", state=DialogueStates.GOT_ANSWER)
+@dp.message_handler(text="Решить другую задачу", state=DialogueStates.DO_NOT_UNDERSTAND_2)
 async def get_another_question(message: aiotypes.Message, state: FSMContext):
     """
     Выдать пользователю задачу
@@ -273,6 +253,6 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
     await state.update_data(question_id=view.question_id)
 
     if view.question_id:
-        await states_.DialogueStates.ASK_QUESTION.set()
+        await DialogueStates.ASK_QUESTION.set()
     else:
-        await states_.DialogueStates.NO_NEW_QUESTIONS.set()
+        await DialogueStates.NO_NEW_QUESTIONS.set()

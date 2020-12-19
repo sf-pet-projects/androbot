@@ -5,9 +5,7 @@ from dateutil import tz
 from androbot.actions import Actions, get_main_menu, start_new_test
 from androbot.errors import UserExistsException, UserNotExistsException
 from androbot.schemas import Answer, EventsLog, Question, TelegramUser
-from androbot.types_.answer_ import Answers
-from androbot.types_.event_ import Events
-from androbot.types_.specialty_ import Specialty
+from androbot.types_ import Answers, Events, Specialty
 from androbot.utils import Utils
 
 

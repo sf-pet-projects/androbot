@@ -3,7 +3,7 @@ import aiogram.types as aiotypes
 from . import actions
 from .errors import NoNewQuestionsException
 from .templates import get_template, render_message
-from .types_.views_ import View
+from .types_ import View
 
 
 def get_main_menu() -> View:
@@ -52,14 +52,20 @@ def get_next_question(tg_user_id: int) -> View:
     Возвращает View со следующим вопросом для пользователя
     """
     try:
-        question = actions.Actions().get_next_test(tg_user_id)
+        with actions.Actions() as act:
+            question = act.get_next_test(tg_user_id)
+
     except NoNewQuestionsException:
         reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
         reply_kb.add(aiotypes.KeyboardButton("Главное меню"))
 
         return View("В базе не осталось новых вопросов", reply_kb)
 
-    answer_text = render_message(get_template("question"), question=question.text_answer)
+    answer_text = render_message(
+        get_template("question"),
+        question=question.text_question,
+        question_category=question.question_category,
+    )
 
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     reply_kb.row(aiotypes.KeyboardButton("Далее"), aiotypes.KeyboardButton("Не понял вопрос"))
@@ -100,11 +106,12 @@ def get_why_do_not_understand() -> View:
     return View(get_template("why_do_not_understand"), reply_kb)
 
 
-def get_correct_answer(question_id: int) -> View:
+def get_correct_answer(tg_user_id: int) -> View:
     """
     Возвращает View с правильным ответом
     """
-    correct_answer = "42"
+    with actions.Actions() as act:
+        correct_answer = act.get_test_result(tg_user_id)
 
     answer_text = render_message(get_template("correct_answer"), correct_answer=correct_answer)
 
