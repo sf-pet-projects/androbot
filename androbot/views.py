@@ -3,7 +3,7 @@ import aiogram.types as aiotypes
 from . import actions
 from .errors import NoNewQuestionsException
 from .templates import get_template, render_message
-from .types_ import View
+from .types_ import Answers, View
 
 
 def get_main_menu() -> View:
@@ -79,8 +79,11 @@ def get_call_to_send_answer(answer_type: str) -> View:
     """
     answer_text = render_message(get_template("call_to_answer"), answer_type=answer_type.lower())
 
-    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.add(aiotypes.KeyboardButton("Ответил мысленно"))
+    if answer_type == Answers.MENTAL.value:
+        reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+        reply_kb.add(aiotypes.KeyboardButton("Ответил мысленно"))
+    else:
+        reply_kb = None
 
     return View(answer_text, reply_kb)
 
