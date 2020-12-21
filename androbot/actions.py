@@ -87,10 +87,10 @@ class Actions:
         next_quest = get_question(self.db, next_quest_id)
         return next_quest
 
-    def get_test_result(self, tg_user_id: int) -> str:
+    def get_test_result(self, tg_user_id: int) -> Question:
         quest_id = crud.get_current_question(self.db, tg_user_id)
         quest = get_question(self.db, quest_id)
-        return quest.text_answer
+        return quest
 
     def edit_specialty(self, tg_user_id: int, new_specialty: Specialty) -> None:
         if is_tg_user_already_exist(self.db, tg_user_id):

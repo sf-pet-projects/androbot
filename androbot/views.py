@@ -111,7 +111,7 @@ def get_correct_answer(tg_user_id: int) -> View:
     Возвращает View с правильным ответом
     """
     with actions.Actions() as act:
-        correct_answer = act.get_test_result(tg_user_id)
+        correct_answer = act.get_test_result(tg_user_id).text_answer
 
     answer_text = render_message(get_template("correct_answer"), correct_answer=correct_answer)
 

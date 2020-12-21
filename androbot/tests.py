@@ -133,7 +133,7 @@ def test_get_test_result():
     Actions().add_user(user)
     Actions().add_question(question)
     question = Actions().get_next_test(user.tg_user_id)
-    right_answer = Actions().get_test_result(user.tg_user_id)
+    right_answer = Actions().get_test_result(user.tg_user_id).text_answer
     assert right_answer == question.text_answer
     Actions().remove_user(user)
     Actions().remove_questions(Specialty.FOR_TEST.value)
