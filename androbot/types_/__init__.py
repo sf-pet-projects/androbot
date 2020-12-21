@@ -1,4 +1,4 @@
-from .answer import Answers  # noqa F401
+from .answer import AnswerTypes  # noqa F401
 from .event import Events  # noqa F401
 from .specialty import Specialty  # noqa F401
 from .state import DialogueStates  # noqa F401

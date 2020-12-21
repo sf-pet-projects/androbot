@@ -9,7 +9,7 @@ from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
 from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
 from .models import Question, TelegramUser
-from .types_ import Answers, Specialty
+from .types_ import AnswerTypes, Specialty
 
 
 def get_main_menu() -> List[str]:
@@ -17,7 +17,7 @@ def get_main_menu() -> List[str]:
 
 
 def start_new_test() -> List[str]:
-    return [e.value for e in Answers]
+    return [e.value for e in AnswerTypes]
 
 
 class Actions:
