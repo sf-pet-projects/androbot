@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class Answers(Enum):
+class AnswerTypes(Enum):
     """
     Типы ответов
     """

@@ -111,12 +111,11 @@ async def show_first_question(message: aiotypes.Message, state: FSMContext):
     Если ОК, задаем первый вопрос.
     """
 
-    message_text_lower = message.text.lower()
-    if all(message_text_lower != x.lower() for x in start_new_test()):
+    if message.text.title() not in start_new_test():
         await message.reply("Ты выбрал некорректный вариант. Попробуй еще раз.", reply=False)
         return
 
-    await state.update_data(answer_type=message.text)
+    await state.update_data(answer_type=message.text.title())
 
     view = views.get_next_question(message.from_user.id)
 
