@@ -43,7 +43,7 @@ poetry run pre-commit
 
 Перед первым запуском нужно загрузить вопросы в бота. Это делается с помощью команды:
 ```
-poerty run python3 androbot\load_questions.py path_to_csv_file_with_questions.csv
+poetry run python3 androbot\load_questions.py path_to_csv_file_with_questions.csv
 ```
 
 
