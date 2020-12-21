@@ -5,8 +5,8 @@ from sqlalchemy.orm import sessionmaker
 from .config import settings
 
 SQLALCHEMY_DATABASE_URL = (
-    f"postgresql://{settings.db_username}:{settings.db_password}@{settings.db_host}/"
-    f"{settings.db_name}"
+    f"postgresql://{settings.db_username}:{settings.db_password}@{settings.db_host}"
+    f":{settings.db_port}/{settings.db_name}"
 )
 
 
