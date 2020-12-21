@@ -10,7 +10,7 @@ from androbot.utils import Utils
 
 
 def test_get_main_menu():
-    assert get_main_menu() == ["Android Developer", "test"]
+    assert get_main_menu() == ["Android Developer"]
 
 
 def test_start_new_test():
@@ -63,22 +63,22 @@ def test_get_next_test():
         tg_user_id=Utils.get_random_number(5),
         name=Utils.get_random_text(10),
         username=Utils.get_random_text(10),
-        specialty=Specialty.FOR_TEST.value,
+        specialty="test",
     )
     question1 = Question(
-        question_type=Specialty.FOR_TEST.value,
+        question_type="test",
         question_category=Utils.get_random_text(10),
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
     question2 = Question(
-        question_type=Specialty.FOR_TEST.value,
+        question_type="test",
         question_category=Utils.get_random_text(10),
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
     question3 = Question(
-        question_type=Specialty.FOR_TEST.value,
+        question_type="test",
         question_category=Utils.get_random_text(10),
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
@@ -114,7 +114,7 @@ def test_get_next_test():
     question = Actions().get_next_test(user.tg_user_id)
     assert question.id == question3.id
     Actions().remove_user(user)
-    Actions().remove_questions(Specialty.FOR_TEST.value)
+    Actions().remove_questions("test")
 
 
 def test_get_test_result():
@@ -122,10 +122,10 @@ def test_get_test_result():
         tg_user_id=Utils.get_random_number(5),
         name=Utils.get_random_text(10),
         username=Utils.get_random_text(10),
-        specialty=Specialty.FOR_TEST.value,
+        specialty="test",
     )
     question = Question(
-        question_type=Specialty.FOR_TEST.value,
+        question_type="test",
         text_answer=Utils.get_random_text(10),
         text_question=Utils.get_random_text(10),
         additional_info=Utils.get_random_text(10),
@@ -136,7 +136,7 @@ def test_get_test_result():
     right_answer = Actions().get_test_result(user.tg_user_id).text_answer
     assert right_answer == question.text_answer
     Actions().remove_user(user)
-    Actions().remove_questions(Specialty.FOR_TEST.value)
+    Actions().remove_questions("test")
 
 
 def test_add_event():
@@ -144,7 +144,7 @@ def test_add_event():
         tg_user_id=Utils.get_random_number(5),
         name=Utils.get_random_text(10),
         username=Utils.get_random_text(10),
-        specialty=Specialty.FOR_TEST.value,
+        specialty="test",
     )
     Actions().add_user(user)
     MSC = tz.gettz("Europe/Moscow")
