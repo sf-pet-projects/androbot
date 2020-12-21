@@ -50,23 +50,6 @@ async def send_start_screen(message: aiotypes.Message):
 
 
 @dp.message_handler(text="Android Developer", state=DialogueStates.MAIN_MENU)
-async def show_android_developer_init(message: aiotypes.Message):
-    """
-    Обработчик для кнопки выбора специализации Android developer
-    """
-    view = views.get_android_developer_init_view()
-
-    await bot.send_message(
-        text=view.text,
-        chat_id=message.chat.id,
-        parse_mode=aiotypes.ParseMode.MARKDOWN,
-        reply_markup=view.markup,
-    )
-
-    await DialogueStates.next()
-
-
-@dp.message_handler(text="Готов!", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
 async def show_select_answer_type(message: aiotypes.Message):
     """
     Предагаем выбрать вариант ответа
@@ -82,6 +65,55 @@ async def show_select_answer_type(message: aiotypes.Message):
     )
 
     await DialogueStates.next()
+
+
+@dp.message_handler(state=DialogueStates.SELECT_ANSWER_TYPE)
+async def show_first_question(message: aiotypes.Message, state: FSMContext):
+    """
+    Проверяем что-за вариант ответа он выбрал.
+    Если ОК, задаем первый вопрос.
+    """
+
+    if message.text.title() not in start_new_test():
+        await message.reply("Ты выбрал некорректный вариант. Попробуй еще раз.", reply=False)
+        return
+
+    await state.update_data(answer_type=message.text.title())
+
+    view = views.get_android_developer_init_view()
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await DialogueStates.next()
+
+
+@dp.message_handler(text="Готов!", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+@dp.message_handler(text="Решить другую задачу", state=DialogueStates.GOT_ANSWER)
+@dp.message_handler(text="Решить другую задачу", state=DialogueStates.DO_NOT_UNDERSTAND_2)
+async def get_another_question(message: aiotypes.Message, state: FSMContext):
+    """
+    Выдать пользователю задачу
+    """
+    view = views.get_next_question(message.from_user.id)
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await state.update_data(question_id=view.question_id)
+
+    if view.question_id:
+        await DialogueStates.ASK_QUESTION.set()
+    else:
+        await DialogueStates.NO_NEW_QUESTIONS.set()
 
 
 @dp.message_handler(text="Отмена", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
@@ -102,36 +134,6 @@ async def back_to_main_menu(message: aiotypes.Message):
     )
 
     await DialogueStates.MAIN_MENU.set()
-
-
-@dp.message_handler(state=DialogueStates.SELECT_ANSWER_TYPE)
-async def show_first_question(message: aiotypes.Message, state: FSMContext):
-    """
-    Проверяем что-за вариант ответа он выбрал.
-    Если ОК, задаем первый вопрос.
-    """
-
-    if message.text.title() not in start_new_test():
-        await message.reply("Ты выбрал некорректный вариант. Попробуй еще раз.", reply=False)
-        return
-
-    await state.update_data(answer_type=message.text.title())
-
-    view = views.get_next_question(message.from_user.id)
-
-    await bot.send_message(
-        text=view.text,
-        chat_id=message.chat.id,
-        parse_mode=aiotypes.ParseMode.MARKDOWN,
-        reply_markup=view.markup,
-    )
-
-    await state.update_data(question_id=view.question_id)
-
-    if view.question_id:
-        await DialogueStates.next()
-    else:
-        await DialogueStates.NO_NEW_QUESTIONS.set()
 
 
 @dp.message_handler(text="Далее", state=DialogueStates.ASK_QUESTION)
@@ -232,26 +234,3 @@ async def get_answer(message: aiotypes.Message, state: FSMContext):
     )
 
     await DialogueStates.next()
-
-
-@dp.message_handler(text="Решить другую задачу", state=DialogueStates.GOT_ANSWER)
-@dp.message_handler(text="Решить другую задачу", state=DialogueStates.DO_NOT_UNDERSTAND_2)
-async def get_another_question(message: aiotypes.Message, state: FSMContext):
-    """
-    Выдать пользователю задачу
-    """
-    view = views.get_next_question(message.from_user.id)
-
-    await bot.send_message(
-        text=view.text,
-        chat_id=message.chat.id,
-        parse_mode=aiotypes.ParseMode.MARKDOWN,
-        reply_markup=view.markup,
-    )
-
-    await state.update_data(question_id=view.question_id)
-
-    if view.question_id:
-        await DialogueStates.ASK_QUESTION.set()
-    else:
-        await DialogueStates.NO_NEW_QUESTIONS.set()

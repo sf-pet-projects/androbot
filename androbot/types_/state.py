@@ -7,8 +7,8 @@ class DialogueStates(StatesGroup):
     """
 
     MAIN_MENU = State()
-    ANDROID_DEVELOPER_INIT_VIEW = State()
     SELECT_ANSWER_TYPE = State()
+    ANDROID_DEVELOPER_INIT_VIEW = State()
     ASK_QUESTION = State()
     CALL_TO_SEND_ANSWER = State()
     GOT_ANSWER = State()
