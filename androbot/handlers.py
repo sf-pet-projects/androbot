@@ -99,34 +99,9 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
     """
     Выдать пользователю задачу
     """
-    view = views.get_next_question(message.from_user.id)
-
-    await bot.send_message(
-        text=view.text,
-        chat_id=message.chat.id,
-        parse_mode=aiotypes.ParseMode.MARKDOWN,
-        reply_markup=view.markup,
-    )
-
-    await state.update_data(question_id=view.question_id)
-
-    if view.question_id:
-        await DialogueStates.ASK_QUESTION.set()
-    else:
-        await DialogueStates.NO_NEW_QUESTIONS.set()
-
-
-        @dp.message_handler(text="Готов!", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
-@dp.message_handler(text="Решить другую задачу", state=DialogueStates.GOT_ANSWER)
-@dp.message_handler(text="Решить другую задачу", state=DialogueStates.DO_NOT_UNDERSTAND_2)
-async def get_another_question(message: aiotypes.Message, state: FSMContext):
-    """
-    Выдать пользователю задачу
-    """
     state_data = await state.get_data()
 
     view = views.get_next_question(message.from_user.id, state_data["answer_type"])
-
 
     await bot.send_message(
         text=view.text,
