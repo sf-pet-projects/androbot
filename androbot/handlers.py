@@ -92,15 +92,14 @@ async def show_call_to_start_test(message: aiotypes.Message, state: FSMContext):
     await DialogueStates.next()
 
 
-@dp.message_handler(text="Отмена", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
-@dp.message_handler(text="Главное меню", state=DialogueStates.GOT_ANSWER)
-@dp.message_handler(text="Главное меню", state=DialogueStates.NO_NEW_QUESTIONS)
-@dp.message_handler(text="Главное меню", state=DialogueStates.DO_NOT_UNDERSTAND_2)
-async def back_to_main_menu(message: aiotypes.Message):
+@dp.message_handler(text="Готов!", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+@dp.message_handler(text="Решить другую задачу", state=DialogueStates.GOT_ANSWER)
+@dp.message_handler(text="Решить другую задачу", state=DialogueStates.DO_NOT_UNDERSTAND_2)
+async def get_another_question(message: aiotypes.Message, state: FSMContext):
     """
-    Возвращаемся в главное меню
+    Выдать пользователю задачу
     """
-    view = views.get_main_menu()
+    view = views.get_next_question(message.from_user.id)
 
     await bot.send_message(
         text=view.text,
@@ -109,10 +108,15 @@ async def back_to_main_menu(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
-    await DialogueStates.MAIN_MENU.set()
+    await state.update_data(question_id=view.question_id)
+
+    if view.question_id:
+        await DialogueStates.ASK_QUESTION.set()
+    else:
+        await DialogueStates.NO_NEW_QUESTIONS.set()
 
 
-@dp.message_handler(text="Готов!", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+        @dp.message_handler(text="Готов!", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
 @dp.message_handler(text="Решить другую задачу", state=DialogueStates.GOT_ANSWER)
 @dp.message_handler(text="Решить другую задачу", state=DialogueStates.DO_NOT_UNDERSTAND_2)
 async def get_another_question(message: aiotypes.Message, state: FSMContext):
@@ -122,6 +126,7 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
     state_data = await state.get_data()
 
     view = views.get_next_question(message.from_user.id, state_data["answer_type"])
+
 
     await bot.send_message(
         text=view.text,
