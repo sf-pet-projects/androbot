@@ -74,13 +74,14 @@ async def show_call_to_start_test(message: aiotypes.Message, state: FSMContext):
     Если ОК, задаем первый вопрос.
     """
 
-    if message.text.title() not in start_new_test():
+    answer_type = message.text.title()
+    if answer_type not in start_new_test():
         await message.reply("Ты выбрал некорректный вариант. Попробуй еще раз.", reply=False)
         return
 
-    await state.update_data(answer_type=message.text.title())
+    await state.update_data(answer_type=answer_type)
 
-    view = views.get_android_developer_init_view()
+    view = views.get_android_developer_init_view(answer_type)
 
     await bot.send_message(
         text=view.text,
@@ -138,25 +139,6 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
         await DialogueStates.NO_NEW_QUESTIONS.set()
 
 
-@dp.message_handler(text="Далее", state=DialogueStates.ASK_QUESTION)
-async def call_to_send_answer(message: aiotypes.Message, state: FSMContext):
-    """
-    Приглашаем написать ответ, если мысленно, то пусть просто нажмет ответил мысленно.
-    """
-    state_data = await state.get_data()
-
-    view = views.get_call_to_send_answer(state_data["answer_type"])
-
-    await bot.send_message(
-        text=view.text,
-        chat_id=message.chat.id,
-        parse_mode=aiotypes.ParseMode.MARKDOWN,
-        reply_markup=view.markup,
-    )
-
-    await DialogueStates.next()
-
-
 @dp.message_handler(text="Не понял вопрос", state=DialogueStates.ASK_QUESTION)
 async def do_not_understand_question(message: aiotypes.Message):
     """
@@ -196,7 +178,7 @@ async def why_do_not_understand(message: aiotypes.Message):
 
 @dp.message_handler(
     content_types=[aiotypes.ContentType.TEXT, aiotypes.ContentType.VOICE],
-    state=[DialogueStates.ASK_QUESTION, DialogueStates.CALL_TO_SEND_ANSWER],
+    state=DialogueStates.ASK_QUESTION,
 )
 async def get_answer(message: aiotypes.Message, state: FSMContext):
     """

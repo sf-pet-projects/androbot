@@ -25,14 +25,23 @@ def get_hello_message(username: str) -> View:
     return View(render_message(get_template("hello"), username=username))
 
 
-def get_android_developer_init_view() -> View:
+def get_android_developer_init_view(answer_type: str) -> View:
     """
     Возвращает View стартового экрана тестирования по специальности Андроид разработчик
     """
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     reply_kb.row(aiotypes.KeyboardButton("Отмена"), aiotypes.KeyboardButton("Готов!"))
 
-    return View(get_template("android_developer"), reply_kb)
+    if answer_type == AnswerTypes.MENTAL.value:
+        answer_way = "нажатием кнопки *Ответил мысленно*"
+    elif answer_type == AnswerTypes.TEXT.value:
+        answer_way = "отправкой текста"
+    elif answer_type == AnswerTypes.VOICE.value:
+        answer_way = "отправкой голосового сообщения"
+
+    answer_text = render_message(get_template("android_developer"), answer_way=answer_way)
+
+    return View(answer_text, reply_kb)
 
 
 def get_select_answer_type_view() -> View:
@@ -61,36 +70,28 @@ def get_next_question(tg_user_id: int, answer_type: str) -> View:
 
         return View("В базе не осталось новых вопросов", reply_kb)
 
-    call_to_action = '\nДля продолжения нажми "Далее".'
     if answer_type == AnswerTypes.MENTAL.value:
-        call_to_action = ""
+        call_to_action = "мысленно"
+    elif answer_type == AnswerTypes.TEXT.value:
+        call_to_action = "текстом"
+    elif answer_type == AnswerTypes.VOICE.value:
+        call_to_action = "голосом"
 
     answer_text = render_message(
         get_template("question"),
-        question=question.text_question,
-        question_category=question.question_category,
+        question=question.text_question.strip(),
+        question_category=question.question_category.strip(),
         call_to_action=call_to_action,
     )
 
     row_buttons = [aiotypes.KeyboardButton("Не понял вопрос")]
     if answer_type == AnswerTypes.MENTAL.value:
         row_buttons.append(aiotypes.KeyboardButton("Ответил мысленно."))
-    else:
-        row_buttons.append(aiotypes.KeyboardButton("Далее"))
 
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     reply_kb.row(*row_buttons)
 
     return View(answer_text, reply_kb, question.id)
-
-
-def get_call_to_send_answer(answer_type: str) -> View:
-    """
-    Возвращает View с призывом написать ответ
-    """
-    answer_text = render_message(get_template("call_to_answer"), answer_type=answer_type.lower())
-
-    return View(answer_text)
 
 
 def get_do_not_understand_question() -> View:
@@ -119,7 +120,10 @@ def get_correct_answer(tg_user_id: int) -> View:
     Возвращает View с правильным ответом
     """
     with actions.Actions() as act:
-        correct_answer = act.get_test_result(tg_user_id).text_answer
+        correct_answer = act.get_test_result(tg_user_id).text_answer.strip()
+
+    if not correct_answer:
+        correct_answer = "К сожалению мы не подготовили правильный ответ на данный вопрос"
 
     answer_text = render_message(get_template("correct_answer"), correct_answer=correct_answer)
 
