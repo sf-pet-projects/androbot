@@ -30,7 +30,7 @@ def get_android_developer_init_view() -> View:
     Возвращает View стартового экрана тестирования по специальности Андроид разработчик
     """
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.row(aiotypes.KeyboardButton("Готов!"), aiotypes.KeyboardButton("Отмена"))
+    reply_kb.row(aiotypes.KeyboardButton("Отмена"), aiotypes.KeyboardButton("Готов!"))
 
     return View(get_template("android_developer"), reply_kb)
 
@@ -47,7 +47,7 @@ def get_select_answer_type_view() -> View:
     return View(get_template("select_answer_type"), reply_kb)
 
 
-def get_next_question(tg_user_id: int) -> View:
+def get_next_question(tg_user_id: int, answer_type: str) -> View:
     """
     Возвращает View со следующим вопросом для пользователя
     """
@@ -61,14 +61,25 @@ def get_next_question(tg_user_id: int) -> View:
 
         return View("В базе не осталось новых вопросов", reply_kb)
 
+    call_to_action = '\nДля продолжения нажми "Далее".'
+    if answer_type == AnswerTypes.MENTAL.value:
+        call_to_action = ""
+
     answer_text = render_message(
         get_template("question"),
         question=question.text_question,
         question_category=question.question_category,
+        call_to_action=call_to_action,
     )
 
+    row_buttons = [aiotypes.KeyboardButton("Не понял вопрос")]
+    if answer_type == AnswerTypes.MENTAL.value:
+        row_buttons.append(aiotypes.KeyboardButton("Ответил мысленно."))
+    else:
+        row_buttons.append(aiotypes.KeyboardButton("Далее"))
+
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.row(aiotypes.KeyboardButton("Далее"), aiotypes.KeyboardButton("Не понял вопрос"))
+    reply_kb.row(*row_buttons)
 
     return View(answer_text, reply_kb, question.id)
 
@@ -79,13 +90,7 @@ def get_call_to_send_answer(answer_type: str) -> View:
     """
     answer_text = render_message(get_template("call_to_answer"), answer_type=answer_type.lower())
 
-    if answer_type == AnswerTypes.MENTAL.value:
-        reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-        reply_kb.add(aiotypes.KeyboardButton("Ответил мысленно"))
-    else:
-        reply_kb = None
-
-    return View(answer_text, reply_kb)
+    return View(answer_text)
 
 
 def get_do_not_understand_question() -> View:

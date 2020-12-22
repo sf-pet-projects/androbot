@@ -5,7 +5,7 @@ from . import schemas, views
 from .actions import Actions, start_new_test
 from .errors import UserExistsException
 from .main import bot, dp
-from .types_ import DialogueStates
+from .types_ import AnswerTypes, DialogueStates
 
 
 @dp.message_handler(commands=["start"], state="*")
@@ -68,7 +68,7 @@ async def show_select_answer_type(message: aiotypes.Message):
 
 
 @dp.message_handler(state=DialogueStates.SELECT_ANSWER_TYPE)
-async def show_first_question(message: aiotypes.Message, state: FSMContext):
+async def show_call_to_start_test(message: aiotypes.Message, state: FSMContext):
     """
     Проверяем что-за вариант ответа он выбрал.
     Если ОК, задаем первый вопрос.
@@ -99,7 +99,9 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
     """
     Выдать пользователю задачу
     """
-    view = views.get_next_question(message.from_user.id)
+    state_data = await state.get_data()
+
+    view = views.get_next_question(message.from_user.id, state_data["answer_type"])
 
     await bot.send_message(
         text=view.text,
@@ -114,26 +116,6 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
         await DialogueStates.ASK_QUESTION.set()
     else:
         await DialogueStates.NO_NEW_QUESTIONS.set()
-
-
-@dp.message_handler(text="Отмена", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
-@dp.message_handler(text="Главное меню", state=DialogueStates.GOT_ANSWER)
-@dp.message_handler(text="Главное меню", state=DialogueStates.NO_NEW_QUESTIONS)
-@dp.message_handler(text="Главное меню", state=DialogueStates.DO_NOT_UNDERSTAND_2)
-async def back_to_main_menu(message: aiotypes.Message):
-    """
-    Возвращаемся в главное меню
-    """
-    view = views.get_main_menu()
-
-    await bot.send_message(
-        text=view.text,
-        chat_id=message.chat.id,
-        parse_mode=aiotypes.ParseMode.MARKDOWN,
-        reply_markup=view.markup,
-    )
-
-    await DialogueStates.MAIN_MENU.set()
 
 
 @dp.message_handler(text="Далее", state=DialogueStates.ASK_QUESTION)
@@ -203,12 +185,12 @@ async def get_answer(message: aiotypes.Message, state: FSMContext):
     state_data = await state.get_data()
     voice_id = None
     if message.text == "Ответил мысленно":
-        answer_type = "Мысленно"
+        answer_type = AnswerTypes.MENTAL.value
     elif message.content_type == aiotypes.ContentType.VOICE:
-        answer_type = "Голосом"
+        answer_type = AnswerTypes.VOICE.value
         voice_id = message.voice.file_id
     elif message.content_type == aiotypes.ContentType.TEXT:
-        answer_type = "Текстом"
+        answer_type = AnswerTypes.TEXT.value
     else:
         await message.reply("Такой ответ мы не принимаем! Напиши текстом, или продиктуй!")
         return
@@ -233,4 +215,4 @@ async def get_answer(message: aiotypes.Message, state: FSMContext):
         reply_markup=view.markup,
     )
 
-    await DialogueStates.next()
+    await DialogueStates.GOT_ANSWER.set()
