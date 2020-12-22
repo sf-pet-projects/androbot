@@ -10,7 +10,6 @@ class DialogueStates(StatesGroup):
     SELECT_ANSWER_TYPE = State()
     ANDROID_DEVELOPER_INIT_VIEW = State()
     ASK_QUESTION = State()
-    CALL_TO_SEND_ANSWER = State()
     GOT_ANSWER = State()
     DO_NOT_UNDERSTAND_1 = State()
     DO_NOT_UNDERSTAND_2 = State()
