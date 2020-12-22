@@ -1,4 +1,3 @@
 *Условие задачи:*
 [[{question_category}]] {question}
-
-Для продолжения нажми "Далее".
+{call_to_action}
