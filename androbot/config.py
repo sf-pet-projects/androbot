@@ -8,9 +8,13 @@ class Settings(BaseSettings):
     db_username: str = Field(..., env="DB_USERNAME")
     db_password: str = Field(..., env="DB_PASSWORD")
     db_host: str = Field(..., env="DB_HOST")
-    db_port: str = Field(..., env="DB_PORT")
+    db_port: int = Field(5432, env="DB_PORT")
     db_name: str = Field(..., env="DB_NAME")
-    static_folder: Path = Field(..., env="STATIC_FOLDER")
+    static_folder: Path = Field("templates", env="STATIC_FOLDER")
+    fsm_redis_host: str = Field("", env="REDIS_HOST")
+    fsm_redis_port: int = Field(6379, env="REDIS_PORT")
+    fsm_redis_db: int = Field(5, env="REDIS_DB")
+    fsm_redis_password: str = Field("", env="REDIS_PASSWORD")
 
     class Config:
         env_file = ".env"

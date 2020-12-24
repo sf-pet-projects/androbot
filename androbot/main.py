@@ -2,6 +2,7 @@ import logging
 
 from aiogram import Bot, Dispatcher, executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.contrib.fsm_storage.redis import RedisStorage2
 from loguru import logger
 
 from . import models
@@ -32,7 +33,18 @@ logging.basicConfig(handlers=[InterceptHandler()], level=0)
 
 # Initialize bot and dispatcher
 bot = Bot(token=settings.tg_api_token)
-dp = Dispatcher(bot, storage=MemoryStorage())
+
+if settings.fsm_redis_host:
+    storage = RedisStorage2(
+        settings.fsm_redis_host,
+        settings.fsm_redis_port,
+        settings.fsm_redis_db,
+        settings.fsm_redis_password,
+    )
+else:
+    storage = MemoryStorage()
+
+dp = Dispatcher(bot, storage=storage)
 
 
 def main(dispatcher: Dispatcher):
