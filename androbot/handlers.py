@@ -185,17 +185,21 @@ async def get_answer(message: aiotypes.Message, state: FSMContext):
     Читает ответ пользователя
     """
     state_data = await state.get_data()
-    voice_id = None
-    if message.text == "Ответил мысленно":
-        answer_type = AnswerTypes.MENTAL.value
-    elif message.content_type == aiotypes.ContentType.VOICE:
-        answer_type = AnswerTypes.VOICE.value
-        voice_id = message.voice.file_id
-    elif message.content_type == aiotypes.ContentType.TEXT:
-        answer_type = AnswerTypes.TEXT.value
-    else:
-        await message.reply("Такой ответ мы не принимаем! Напиши текстом, или продиктуй!")
+
+    answer_type = state_data["answer_type"]
+    is_voice_answer = answer_type == AnswerTypes.VOICE.value
+    is_text_answer = answer_type == AnswerTypes.TEXT.value
+
+    if is_voice_answer and message.content_type != aiotypes.ContentType.VOICE:
+        await message.reply("Ты выбрал вариант - отвечать голосом. Продиктуй ответ.")
         return
+    elif is_text_answer and message.content_type != aiotypes.ContentType.TEXT:
+        await message.reply("Ты выбрал вариант - отвечать текстом. Напиши ответ.")
+        return
+
+    voice_id = None
+    if is_voice_answer:
+        voice_id = message.voice.file_id
 
     answer = schemas.Answer(
         quest_id=state_data["question_id"],
