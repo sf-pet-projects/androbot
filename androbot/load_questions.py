@@ -8,6 +8,13 @@ from androbot.types_ import Specialty
 
 
 def load_questions(speciality: Specialty, filename: str, drop_questions: bool) -> None:
+    """
+    Загружаем в базу данных вопросы из указанного csv файла.
+    Указываем специальность для которой нужно загрузить вопросы
+    Если указан параметр drop_questions - то удаляем старые
+    вопросы перед загрузкой (если нет еще ответов - сработает)
+    """
+
     models.Base.metadata.create_all(bind=engine)
 
     with Actions() as act:
@@ -19,17 +26,13 @@ def load_questions(speciality: Specialty, filename: str, drop_questions: bool) -
 
 
 def main():
-    all_specialities = [s.value for s in Specialty]
-    default_speciality = Specialty.ANDROID
-
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", help="csv file with questions", type=str)
     parser.add_argument(
         "-s",
         "--speciality",
-        help=f"choose speciality from {all_specialities} ",
-        type=str,
-        default=default_speciality,
+        choices=[s.value for s in Specialty],
+        default=Specialty.ANDROID,
     )
     parser.add_argument(
         "-d", "--drop_questions", help="drop questions before load", action="store_true"
@@ -40,11 +43,7 @@ def main():
         print(f"File '{args.filename}' doesn't exist")
         return
 
-    try:
-        speciality = Specialty(args.speciality)
-    except ValueError:
-        print(f"Wrong speciality '{args.speciality}")
-        return
+    speciality = Specialty(args.speciality)
 
     load_questions(speciality, args.filename, args.drop_questions)
 
