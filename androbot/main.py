@@ -40,6 +40,7 @@ if settings.fsm_redis_host:
         settings.fsm_redis_port,
         settings.fsm_redis_db,
         settings.fsm_redis_password,
+        ssl=settings.fsm_redis_ssl,
     )
 else:
     storage = MemoryStorage()
