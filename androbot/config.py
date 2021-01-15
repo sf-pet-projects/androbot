@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     fsm_redis_port: int = Field(6379, env="REDIS_PORT")
     fsm_redis_db: int = Field(5, env="REDIS_DB")
     fsm_redis_password: Optional[str] = Field(None, env="REDIS_PASSWORD")
+    fsm_redis_ssl: Optional[bool] = Field(None, env="REDIS_SSL")
 
     class Config:
         env_file = ".env"
