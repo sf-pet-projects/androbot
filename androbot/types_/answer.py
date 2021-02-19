@@ -8,4 +8,3 @@ class AnswerTypes(Enum):
 
     VOICE = "🎤 Голосом"
     TEXT = "✍ Текстом"
-    MENTAL = "💬 Мысленно"
