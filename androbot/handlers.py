@@ -5,7 +5,8 @@ from . import schemas, views
 from .actions import Actions, start_new_test
 from .errors import UserExistsException
 from .main import bot, dp
-from .types_ import AnswerTypes, DialogueStates
+from .types_ import AnswerTypes, DialogueStates, Events, Specialty
+from .utils import log_event
 
 
 @dp.message_handler(commands=["start"], state="*")
@@ -17,10 +18,7 @@ async def send_start_screen(message: aiotypes.Message):
         (name for name in [message.from_user.first_name, message.from_user.last_name] if name)
     )
     tg_user = schemas.TelegramUser(
-        tg_user_id=message.from_user.id,
-        name=full_user_name,
-        username=message.from_user.username,
-        specialty="Android Developer",  # TODO это не должно быть обязательным полем
+        tg_user_id=message.from_user.id, name=full_user_name, username=message.from_user.username
     )
 
     try:
@@ -34,6 +32,8 @@ async def send_start_screen(message: aiotypes.Message):
             reply_markup=view.markup,
         )
 
+        log_event(message.from_user.id, Events.registration, message.text.replace("/start ", ""))
+
     except UserExistsException:
         pass
 
@@ -46,14 +46,21 @@ async def send_start_screen(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
+    log_event(message.from_user.id, Events.start)
+
     await DialogueStates.MAIN_MENU.set()
 
 
 @dp.message_handler(regexp="Android Developer", state=DialogueStates.MAIN_MENU)
-async def show_select_answer_type(message: aiotypes.Message):
+async def show_select_answer_type(message: aiotypes.Message, state: FSMContext):
     """
     Предагаем выбрать вариант ответа
     """
+
+    new_speciality = Specialty.ANDROID
+
+    with Actions() as act:
+        act.edit_specialty(message.from_user.id, new_speciality)
 
     view = views.get_select_answer_type_view()
 
@@ -63,6 +70,10 @@ async def show_select_answer_type(message: aiotypes.Message):
         parse_mode=aiotypes.ParseMode.MARKDOWN,
         reply_markup=view.markup,
     )
+
+    await state.update_data(speciality=new_speciality.value)
+
+    log_event(message.from_user.id, Events.speciality, new_speciality.value)
 
     await DialogueStates.next()
 
@@ -79,8 +90,6 @@ async def show_call_to_start_test(message: aiotypes.Message, state: FSMContext):
         await message.reply("Ты выбрал некорректный вариант. Попробуй еще раз.", reply=False)
         return
 
-    await state.update_data(answer_type=answer_type)
-
     view = views.get_android_developer_init_view(answer_type)
 
     await bot.send_message(
@@ -89,6 +98,11 @@ async def show_call_to_start_test(message: aiotypes.Message, state: FSMContext):
         parse_mode=aiotypes.ParseMode.MARKDOWN,
         reply_markup=view.markup,
     )
+
+    state_data = await state.get_data()
+    log_event(message.from_user.id, Events.answer_type, state_data["speciality"], answer_type)
+
+    await state.update_data(answer_type=answer_type)
 
     await DialogueStates.next()
 
@@ -130,6 +144,8 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
         parse_mode=aiotypes.ParseMode.MARKDOWN,
         reply_markup=view.markup,
     )
+
+    log_event(message.from_user.id, Events.task_start, state_data["speciality"], view.question_id)
 
     await state.update_data(question_id=view.question_id)
 
@@ -211,6 +227,15 @@ async def get_answer(message: aiotypes.Message, state: FSMContext):
 
     with Actions() as act:
         act.add_answer(answer)
+
+    log_event(
+        message.from_user.id,
+        Events.send_solution,
+        state_data["speciality"],
+        state_data["question_id"],
+        voice_id or message.text,
+        state_data["answer_type"],
+    )
 
     view = views.get_correct_answer(message.from_user.id)
 

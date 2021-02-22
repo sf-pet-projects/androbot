@@ -21,3 +21,7 @@ class NoNewQuestionsException(BaseAppError):
 
 class TemplateNotFound(BaseAppError):
     pass
+
+
+class TooManyParamsForLoggingActions(BaseAppError):
+    pass
