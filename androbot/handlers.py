@@ -32,7 +32,7 @@ async def send_start_screen(message: aiotypes.Message):
             reply_markup=view.markup,
         )
 
-        log_event(message.from_user.id, Events.registration, message.text.replace("/start ", ""))
+        log_event(message.from_user.id, Events.Registration, message.text.replace("/start ", ""))
 
     except UserExistsException:
         pass
