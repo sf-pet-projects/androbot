@@ -32,7 +32,7 @@ async def send_start_screen(message: aiotypes.Message):
             reply_markup=view.markup,
         )
 
-        log_event(message.from_user.id, Events.registration, message.text.replace("/start ", ""))
+        log_event(message.from_user.id, Events.Registration, message.text.replace("/start ", ""))
 
     except UserExistsException:
         pass
@@ -46,7 +46,7 @@ async def send_start_screen(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
-    log_event(message.from_user.id, Events.start)
+    log_event(message.from_user.id, Events.Start)
 
     await DialogueStates.MAIN_MENU.set()
 
@@ -73,7 +73,7 @@ async def show_select_answer_type(message: aiotypes.Message, state: FSMContext):
 
     await state.update_data(speciality=new_speciality.value)
 
-    log_event(message.from_user.id, Events.speciality, new_speciality.value)
+    log_event(message.from_user.id, Events.Speciality, new_speciality.value)
 
     await DialogueStates.next()
 
@@ -100,7 +100,7 @@ async def show_call_to_start_test(message: aiotypes.Message, state: FSMContext):
     )
 
     state_data = await state.get_data()
-    log_event(message.from_user.id, Events.answer_type, state_data["speciality"], answer_type)
+    log_event(message.from_user.id, Events.AnswerType, state_data["speciality"], answer_type)
 
     await state.update_data(answer_type=answer_type)
 
@@ -145,7 +145,7 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
         reply_markup=view.markup,
     )
 
-    log_event(message.from_user.id, Events.task_start, state_data["speciality"], view.question_id)
+    log_event(message.from_user.id, Events.TaskStart, state_data["speciality"], view.question_id)
 
     await state.update_data(question_id=view.question_id)
 
@@ -230,7 +230,7 @@ async def get_answer(message: aiotypes.Message, state: FSMContext):
 
     log_event(
         message.from_user.id,
-        Events.send_solution,
+        Events.SendSolution,
         state_data["speciality"],
         state_data["question_id"],
         voice_id or message.text,

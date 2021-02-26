@@ -150,7 +150,7 @@ def test_add_event():
     MSC = tz.gettz("Europe/Moscow")
     event = EventsLog(
         tg_user_id=user.tg_user_id,
-        event_type=Events.send_solution,
+        event_type=Events.SendSolution,
         datetime=datetime.datetime.now(tz=MSC),
         param1=Specialty.ANDROID.value,
         param2=Utils.get_random_number(5),
