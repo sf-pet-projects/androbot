@@ -32,7 +32,7 @@ async def send_start_screen(message: aiotypes.Message):
             reply_markup=view.markup,
         )
 
-        log_event(message.from_user.id, Events.Registration, message.text.replace("/start ", ""))
+        log_event(message.from_user.id, Events.registration, message.text.replace("/start ", ""))
 
     except UserExistsException:
         pass
@@ -51,7 +51,7 @@ async def send_start_screen(message: aiotypes.Message):
     await DialogueStates.MAIN_MENU.set()
 
 
-@dp.message_handler(text="Android Developer", state=DialogueStates.MAIN_MENU)
+@dp.message_handler(regexp="Android Developer", state=DialogueStates.MAIN_MENU)
 async def show_select_answer_type(message: aiotypes.Message, state: FSMContext):
     """
     Предагаем выбрать вариант ответа
@@ -107,7 +107,7 @@ async def show_call_to_start_test(message: aiotypes.Message, state: FSMContext):
     await DialogueStates.next()
 
 
-@dp.message_handler(text="Отмена", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+@dp.message_handler(regexp="Отмена", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
 @dp.message_handler(text="Главное меню", state=DialogueStates.GOT_ANSWER)
 @dp.message_handler(text="Главное меню", state=DialogueStates.NO_NEW_QUESTIONS)
 @dp.message_handler(text="Главное меню", state=DialogueStates.DO_NOT_UNDERSTAND_2)
@@ -127,7 +127,7 @@ async def back_to_main_menu(message: aiotypes.Message):
     await DialogueStates.MAIN_MENU.set()
 
 
-@dp.message_handler(text="Готов!", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+@dp.message_handler(regexp="Готов!", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
 @dp.message_handler(text="Решить другую задачу", state=DialogueStates.GOT_ANSWER)
 @dp.message_handler(text="Решить другую задачу", state=DialogueStates.DO_NOT_UNDERSTAND_2)
 async def get_another_question(message: aiotypes.Message, state: FSMContext):
