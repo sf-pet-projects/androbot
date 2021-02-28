@@ -86,6 +86,7 @@ class Actions:
         new_questions = list(set(all_question) - set(passed_questions))
         logger.warning(new_questions)
         if not new_questions:
+            crud.remove_sessions(self.db, tg_user.tg_user_id)
             raise NoNewQuestionsException("All questions were answered")
 
         next_quest_id = random.choice(new_questions)

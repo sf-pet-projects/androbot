@@ -134,7 +134,7 @@ def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty) -> None:
 
 def get_current_question(db: Session, tg_user_id: int) -> Optional[int]:
     session = db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
-    if session is not None:
+    if session is not None and session.quest_id != 0:
         return session.quest_id
     else:
         return None

@@ -3,7 +3,7 @@ import datetime
 from dateutil import tz
 
 from androbot.actions import Actions, get_main_menu, start_new_test
-from androbot.errors import UserExistsException, UserNotExistsException
+from androbot.errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
 from androbot.schemas import Answer, EventsLog, Question, TelegramUser
 from androbot.types_ import AnswerTypes, Events, Specialty
 from androbot.utils import Utils
@@ -244,5 +244,18 @@ def test_has_started_test():
     Actions().add_question(question)
     Actions().get_next_test(user.tg_user_id)
     assert Actions().has_started_test(user.tg_user_id) is True
-    Actions().remove_user(user)
-    Actions().remove_questions("test")
+    answer = Answer(
+        quest_id=question.id,
+        tg_user_id=user.tg_user_id,
+        answer_type=start_new_test()[1],
+        text_answer="   ",
+        link_to_audio_answer=Utils.get_random_text(50),
+    )
+    Actions().add_answer(answer)
+    try:
+        Actions().get_next_test(user.tg_user_id)
+        assert False
+    except NoNewQuestionsException:
+        Actions().remove_user(user)
+        Actions().remove_questions("test")
+        assert True
