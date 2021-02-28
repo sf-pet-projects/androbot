@@ -33,6 +33,18 @@ def test_add_user():
     Actions().remove_user(db_user)
 
 
+def test_add_user_with_symbols_in_username():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username="\"AL'🖐",
+        specialty=Specialty.ANDROID.value,
+    )
+    db_user = Actions().add_user(user)
+    assert db_user.tg_user_id == user.tg_user_id
+    Actions().remove_user(db_user)
+
+
 def test_add_already_exist_user():
     user = TelegramUser(
         tg_user_id=Utils.get_random_number(5),
