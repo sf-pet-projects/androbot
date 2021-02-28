@@ -87,6 +87,9 @@ class Actions:
         next_quest = get_question(self.db, next_quest_id)
         return next_quest
 
+    def has_started_test(self, tg_user_id: int) -> bool:
+        return crud.get_current_question(self.db, tg_user_id) is not None
+
     def get_test_result(self, tg_user_id: int) -> Question:
         quest_id = crud.get_current_question(self.db, tg_user_id)
         quest = get_question(self.db, quest_id)
