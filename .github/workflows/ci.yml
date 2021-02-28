@@ -27,7 +27,7 @@ jobs:
         poetry run isort --check-only --diff androbot; ISORT_CODE=$?
         poetry run flake8 --output-file=flake8-report.txt --tee androbot; FLAKE8_CODE=$?
         poetry run mypy --html-report mypy-report androbot; MYPY_CODE=$?
-        poetry run pytest androbot; PYTEST_CODE=$?
+        poetry run pytest androbot/tests.py; PYTEST_CODE=$?
         if [[ $BLACK_CODE -ne 0 || $ISORT_CODE -ne 0 || $FLAKE8_CODE -ne 0 || $MYPY_CODE -ne 0 || $PYTEST_CODE -ne 0 ]]; then
           echo "SOME CHECKS HAVE FAILED"
           exit 1
