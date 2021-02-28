@@ -1,6 +1,6 @@
 import csv
 import random
-from typing import List
+from typing import List, Optional
 
 from loguru import logger
 
@@ -63,10 +63,16 @@ class Actions:
         logger.info("Add question {}", question)
         return db_user
 
-    def add_answer(self, answer: schemas.Answer) -> TelegramUser:
-        db_user = crud.add_answer(self.db, answer)
-        logger.info("Add new user's answer {}", answer)
-        return db_user
+    def add_answer(self, answer: schemas.Answer) -> Optional[TelegramUser]:
+        has_text_answer = answer.text_answer is not None and answer.text_answer.strip()
+        has_voice_answer = (
+            answer.link_to_audio_answer is not None and answer.link_to_audio_answer.strip()
+        )
+        if has_text_answer or has_voice_answer:
+            db_user = crud.add_answer(self.db, answer)
+            logger.info("Add new user's answer {}", answer)
+            return db_user
+        return None
 
     def remove_questions(self, specialty: str) -> None:
         crud.remove_questions(self.db, specialty)

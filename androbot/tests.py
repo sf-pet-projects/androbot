@@ -14,7 +14,11 @@ def test_get_main_menu():
 
 
 def test_start_new_test():
-    assert start_new_test() == ["Текстом", "Голосом", "Мысленно"]
+    assert start_new_test() == [
+        AnswerTypes.VOICE.value,
+        AnswerTypes.TEXT.value,
+        AnswerTypes.MENTAL.value,
+    ]
 
 
 def test_add_user():
@@ -22,6 +26,18 @@ def test_add_user():
         tg_user_id=Utils.get_random_number(5),
         name=Utils.get_random_text(10),
         username=Utils.get_random_text(10),
+        specialty=Specialty.ANDROID.value,
+    )
+    db_user = Actions().add_user(user)
+    assert db_user.tg_user_id == user.tg_user_id
+    Actions().remove_user(db_user)
+
+
+def test_add_user_with_symbols_in_username():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username="\"AL'🖐",
         specialty=Specialty.ANDROID.value,
     )
     db_user = Actions().add_user(user)
@@ -159,3 +175,52 @@ def test_add_event():
     )
     Actions().add_event(event)
     Actions().remove_user(user)
+
+
+def test_no_add_answer_with_empty_text():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username=Utils.get_random_text(10),
+        specialty="test",
+    )
+    question1 = Question(
+        question_type="test",
+        question_category=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
+        text_answer=Utils.get_random_text(10),
+    )
+    question2 = Question(
+        question_type="test",
+        question_category=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
+        text_answer=Utils.get_random_text(10),
+    )
+    question3 = Question(
+        question_type="test",
+        question_category=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
+        text_answer=Utils.get_random_text(10),
+    )
+    Actions().add_user(user)
+    Actions().add_question(question1)
+    Actions().add_question(question2)
+    Actions().add_question(question3)
+    answer1 = Answer(
+        quest_id=question1.id,
+        tg_user_id=user.tg_user_id,
+        answer_type=start_new_test()[1],
+        text_answer="   ",
+        link_to_audio_answer=Utils.get_random_text(50),
+    )
+    answer2 = Answer(
+        quest_id=question2.id,
+        tg_user_id=user.tg_user_id,
+        answer_type=start_new_test()[1],
+        text_answer="   ",
+        link_to_audio_answer="",
+    )
+    assert Actions().add_answer(answer1) is not None
+    assert Actions().add_answer(answer2) is None
+    Actions().remove_user(user)
+    Actions().remove_questions("test")
