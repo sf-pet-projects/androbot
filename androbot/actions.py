@@ -96,10 +96,13 @@ class Actions:
     def has_started_test(self, tg_user_id: int) -> bool:
         return crud.get_current_question(self.db, tg_user_id) is not None
 
-    def get_test_result(self, tg_user_id: int) -> Question:
+    def get_test_result(self, tg_user_id: int) -> Optional[Question]:
         quest_id = crud.get_current_question(self.db, tg_user_id)
-        quest = get_question(self.db, quest_id)
-        return quest
+        if quest_id is not None:
+            quest = get_question(self.db, quest_id)
+            return quest
+        else:
+            return None
 
     def edit_specialty(self, tg_user_id: int, new_specialty: Specialty) -> None:
         if is_tg_user_already_exist(self.db, tg_user_id):

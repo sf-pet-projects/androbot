@@ -1,11 +1,10 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
 from . import models, schemas
 from .models import Answer, CurrentSession, EventsLog, Question, TelegramUser
 from .types_ import Specialty
-from typing import Optional
 
 
 def get_tg_users(db: Session, skip: int = 0) -> List[TelegramUser]:
@@ -135,7 +134,10 @@ def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty) -> None:
 
 def get_current_question(db: Session, tg_user_id: int) -> Optional[int]:
     session = db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
-    return session.quest_id
+    if session is not None:
+        return session.quest_id
+    else:
+        return None
 
 
 def get_all_questions(db: Session, specialty: str) -> List[Question]:
