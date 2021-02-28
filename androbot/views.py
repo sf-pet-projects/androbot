@@ -12,7 +12,7 @@ def get_main_menu() -> View:
     """
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     for speciality in actions.get_main_menu():
-        btn_1 = aiotypes.KeyboardButton(speciality)
+        btn_1 = aiotypes.KeyboardButton(f"✅ {speciality}")
         reply_kb.add(btn_1)
 
     return View(get_template("start"), reply_kb)
@@ -30,11 +30,9 @@ def get_android_developer_init_view(answer_type: str) -> View:
     Возвращает View стартового экрана тестирования по специальности Андроид разработчик
     """
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.row(aiotypes.KeyboardButton("Отмена"), aiotypes.KeyboardButton("Готов!"))
+    reply_kb.row(aiotypes.KeyboardButton("🚫 Отмена"), aiotypes.KeyboardButton("✅ Готов!"))
 
-    if answer_type == AnswerTypes.MENTAL.value:
-        answer_way = "нажатием кнопки *Ответил мысленно*"
-    elif answer_type == AnswerTypes.TEXT.value:
+    if answer_type == AnswerTypes.TEXT.value:
         answer_way = "отправкой текста"
     elif answer_type == AnswerTypes.VOICE.value:
         answer_way = "отправкой голосового сообщения"
@@ -70,9 +68,7 @@ def get_next_question(tg_user_id: int, answer_type: str) -> View:
 
         return View("В базе не осталось новых вопросов", reply_kb)
 
-    if answer_type == AnswerTypes.MENTAL.value:
-        call_to_action = "мысленно"
-    elif answer_type == AnswerTypes.TEXT.value:
+    if answer_type == AnswerTypes.TEXT.value:
         call_to_action = "текстом"
     elif answer_type == AnswerTypes.VOICE.value:
         call_to_action = "голосом"
@@ -85,8 +81,6 @@ def get_next_question(tg_user_id: int, answer_type: str) -> View:
     )
 
     row_buttons = [aiotypes.KeyboardButton("Не понял вопрос")]
-    if answer_type == AnswerTypes.MENTAL.value:
-        row_buttons.append(aiotypes.KeyboardButton("Ответил мысленно."))
 
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     reply_kb.row(*row_buttons)
