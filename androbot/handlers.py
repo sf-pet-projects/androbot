@@ -160,7 +160,7 @@ async def after_select_answer_type(message: aiotypes.Message, state: FSMContext)
     await DialogueStates.next()
 
 
-@dp.message_handler(regexp="Отмена", state=DialogueStates.DO_YOU_READY_FOR_TEST)
+@dp.message_handler(regexp="Отмена", state=DialogueStates.ARE_YOU_READY_FOR_TEST)
 @dp.message_handler(regexp="Главное меню", state=DialogueStates.GOT_ANSWER)
 @dp.message_handler(regexp="Главное меню", state=DialogueStates.HAS_STARTED_TEST)
 @dp.message_handler(regexp="Главное меню", state=DialogueStates.NO_NEW_QUESTIONS)
