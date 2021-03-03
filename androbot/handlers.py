@@ -80,9 +80,7 @@ async def after_select_speciality(message: aiotypes.Message, state: FSMContext):
             log_event(message.from_user.id, Events.AlreadyTried, new_speciality.value)
 
             await DialogueStates.next()
-
         else:
-
             await select_answer_type(message)
 
 
