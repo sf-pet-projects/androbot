@@ -18,6 +18,9 @@ def get_template(template_name: str) -> str:
     template_file = settings.static_folder / template_name
     if not template_file.exists() and template_file.suffix != ".md":
         template_file = template_file.with_suffix(".md")
+        from loguru import logger
+
+        logger.error(template_file)
         if not template_file.exists():
             raise TemplateNotFound(f"Template {template_name} not found!")
 

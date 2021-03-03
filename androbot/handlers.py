@@ -52,15 +52,74 @@ async def send_start_screen(message: aiotypes.Message):
 
 
 @dp.message_handler(regexp="Android Developer", state=DialogueStates.MAIN_MENU)
-async def show_select_answer_type(message: aiotypes.Message, state: FSMContext):
+async def after_select_speciality(message: aiotypes.Message, state: FSMContext):
     """
-    Предагаем выбрать вариант ответа
+    Проверяем что тест еще не начат.
+    Предагаем выбрать cпособ ответа
     """
 
     new_speciality = Specialty.ANDROID
 
+    await state.update_data(speciality=new_speciality.value)
+
+    log_event(message.from_user.id, Events.Speciality, new_speciality.value)
+
     with Actions() as act:
         act.edit_specialty(message.from_user.id, new_speciality)
+
+        if act.has_started_test(message.from_user.id):
+            view = views.get_do_you_want_to_reset_test_view()
+
+            await bot.send_message(
+                text=view.text,
+                chat_id=message.chat.id,
+                parse_mode=aiotypes.ParseMode.MARKDOWN,
+                reply_markup=view.markup,
+            )
+
+            log_event(message.from_user.id, Events.AlreadyTried, new_speciality.value)
+
+            await DialogueStates.next()
+
+        else:
+
+            await select_answer_type(message)
+
+
+@dp.message_handler(regexp="Начать с начала", state=DialogueStates.HAS_STARTED_TEST)
+async def reset_test_progress(message: aiotypes.Message, state: FSMContext):
+    """
+    Сбрасываем отвеченные вопросы, и начинаем отвечать заново
+    """
+    state_data = await state.get_data()
+    log_event(message.from_user.id, Events.ResetProgress, state_data["speciality"])
+
+    # TODO: Вызывать процедуру сброса ответов
+
+    await bot.send_message(
+        text="Пока не реализовано",
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+    )
+
+    await select_answer_type(message)
+
+
+@dp.message_handler(regexp="Продолжить", state=DialogueStates.HAS_STARTED_TEST)
+async def continue_test(message: aiotypes.Message, state: FSMContext):
+    """
+    Продолжаем отвечать на вопросы теста
+    """
+    state_data = await state.get_data()
+    log_event(message.from_user.id, Events.ContinueTask, state_data["speciality"])
+
+    await select_answer_type(message)
+
+
+async def select_answer_type(message: aiotypes.Message):
+    """
+    Предлагает выбрать способ ответа на вопросы
+    """
 
     view = views.get_select_answer_type_view()
 
@@ -71,15 +130,11 @@ async def show_select_answer_type(message: aiotypes.Message, state: FSMContext):
         reply_markup=view.markup,
     )
 
-    await state.update_data(speciality=new_speciality.value)
-
-    log_event(message.from_user.id, Events.Speciality, new_speciality.value)
-
-    await DialogueStates.next()
+    await DialogueStates.SELECT_ANSWER_TYPE.set()
 
 
 @dp.message_handler(state=DialogueStates.SELECT_ANSWER_TYPE)
-async def show_call_to_start_test(message: aiotypes.Message, state: FSMContext):
+async def after_select_answer_type(message: aiotypes.Message, state: FSMContext):
     """
     Проверяем что-за вариант ответа он выбрал.
     Если ОК, задаем первый вопрос.
@@ -107,10 +162,11 @@ async def show_call_to_start_test(message: aiotypes.Message, state: FSMContext):
     await DialogueStates.next()
 
 
-@dp.message_handler(regexp="Отмена", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
-@dp.message_handler(text="Главное меню", state=DialogueStates.GOT_ANSWER)
-@dp.message_handler(text="Главное меню", state=DialogueStates.NO_NEW_QUESTIONS)
-@dp.message_handler(text="Главное меню", state=DialogueStates.DO_NOT_UNDERSTAND_2)
+@dp.message_handler(regexp="Отмена", state=DialogueStates.DO_YOU_READY_FOR_TEST)
+@dp.message_handler(regexp="Главное меню", state=DialogueStates.GOT_ANSWER)
+@dp.message_handler(regexp="Главное меню", state=DialogueStates.HAS_STARTED_TEST)
+@dp.message_handler(regexp="Главное меню", state=DialogueStates.NO_NEW_QUESTIONS)
+@dp.message_handler(regexp="Главное меню", state=DialogueStates.DO_NOT_UNDERSTAND_2)
 async def back_to_main_menu(message: aiotypes.Message):
     """
     Возвращаемся в главное меню
@@ -124,10 +180,12 @@ async def back_to_main_menu(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
+    log_event(message.from_user.id, Events.Start)
+
     await DialogueStates.MAIN_MENU.set()
 
 
-@dp.message_handler(regexp="Готов!", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+@dp.message_handler(regexp="Готов!", state=DialogueStates.DO_YOU_READY_FOR_TEST)
 @dp.message_handler(text="Решить другую задачу", state=DialogueStates.GOT_ANSWER)
 @dp.message_handler(text="Решить другую задачу", state=DialogueStates.DO_NOT_UNDERSTAND_2)
 async def get_another_question(message: aiotypes.Message, state: FSMContext):
