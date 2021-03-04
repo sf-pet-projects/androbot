@@ -9,7 +9,7 @@ class DialogueStates(StatesGroup):
     MAIN_MENU = State()
     HAS_STARTED_TEST = State()
     SELECT_ANSWER_TYPE = State()
-    DO_YOU_READY_FOR_TEST = State()
+    ARE_YOU_READY_FOR_TEST = State()
     ASK_QUESTION = State()
     GOT_ANSWER = State()
     DO_NOT_UNDERSTAND_1 = State()

@@ -183,7 +183,7 @@ async def back_to_main_menu(message: aiotypes.Message):
     await DialogueStates.MAIN_MENU.set()
 
 
-@dp.message_handler(regexp="Готов!", state=DialogueStates.DO_YOU_READY_FOR_TEST)
+@dp.message_handler(regexp="Готов!", state=DialogueStates.ARE_YOU_READY_FOR_TEST)
 @dp.message_handler(text="Решить другую задачу", state=DialogueStates.GOT_ANSWER)
 @dp.message_handler(text="Решить другую задачу", state=DialogueStates.DO_NOT_UNDERSTAND_2)
 async def get_another_question(message: aiotypes.Message, state: FSMContext):
