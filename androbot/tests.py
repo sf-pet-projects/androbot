@@ -133,7 +133,7 @@ def test_get_next_test():
     Actions().remove_questions("test")
 
 
-def test_get_test_result():
+def test_get_current_question():
     user = TelegramUser(
         tg_user_id=Utils.get_random_number(5),
         name=Utils.get_random_text(10),
@@ -149,7 +149,7 @@ def test_get_test_result():
     Actions().add_user(user)
     Actions().add_question(question)
     question = Actions().get_next_test(user.tg_user_id)
-    right_answer = Actions().get_test_result(user.tg_user_id).text_answer
+    right_answer = Actions().get_current_question(user.tg_user_id).text_answer
     assert right_answer == question.text_answer
     Actions().remove_user(user)
     Actions().remove_questions("test")
@@ -259,3 +259,33 @@ def test_has_started_test():
         Actions().remove_user(user)
         Actions().remove_questions("test")
         assert True
+
+
+def test_start_test_after_reset_session():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username=Utils.get_random_text(10),
+        specialty="test",
+    )
+    question = Question(
+        question_type="test",
+        question_category=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
+        text_answer=Utils.get_random_text(10),
+    )
+    Actions().add_user(user)
+    assert Actions().has_started_test(user.tg_user_id) is False
+    Actions().add_question(question)
+    answer = Answer(
+        quest_id=question.id,
+        tg_user_id=user.tg_user_id,
+        answer_type=start_new_test()[1],
+        text_answer=Utils.get_random_text(50),
+        link_to_audio_answer=Utils.get_random_text(50),
+    )
+    Actions().add_answer(answer)
+    Actions().reset_session(user)
+    assert Actions().get_next_test(user.tg_user_id).text_question == question.text_question
+    Actions().remove_user(user)
+    Actions().remove_questions("test")

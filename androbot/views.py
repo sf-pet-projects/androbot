@@ -114,7 +114,7 @@ def get_correct_answer(tg_user_id: int) -> View:
     Возвращает View с правильным ответом
     """
     with actions.Actions() as act:
-        correct_answer = act.get_test_result(tg_user_id).text_answer.strip()
+        correct_answer = act.get_current_question(tg_user_id).text_answer.strip()
 
     if not correct_answer:
         correct_answer = "К сожалению мы не подготовили правильный ответ на данный вопрос"
