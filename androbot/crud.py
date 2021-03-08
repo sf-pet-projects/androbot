@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -132,9 +132,12 @@ def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty) -> None:
     db.close()
 
 
-def get_current_question(db: Session, tg_user_id: int) -> int:
+def get_current_question(db: Session, tg_user_id: int) -> Optional[int]:
     session = db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
-    return session.quest_id
+    if session is not None and session.quest_id != 0:
+        return session.quest_id
+    else:
+        return None
 
 
 def get_all_questions(db: Session, specialty: str) -> List[Question]:

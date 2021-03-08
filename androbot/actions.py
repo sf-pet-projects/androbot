@@ -86,6 +86,7 @@ class Actions:
         new_questions = list(set(all_question) - set(passed_questions))
         logger.warning(new_questions)
         if not new_questions:
+            crud.remove_sessions(self.db, tg_user.tg_user_id)
             raise NoNewQuestionsException("All questions were answered")
 
         next_quest_id = random.choice(new_questions)
@@ -93,10 +94,16 @@ class Actions:
         next_quest = get_question(self.db, next_quest_id)
         return next_quest
 
-    def get_test_result(self, tg_user_id: int) -> Question:
+    def has_started_test(self, tg_user_id: int) -> bool:
+        return crud.get_current_question(self.db, tg_user_id) is not None
+
+    def get_test_result(self, tg_user_id: int) -> Optional[Question]:
         quest_id = crud.get_current_question(self.db, tg_user_id)
-        quest = get_question(self.db, quest_id)
-        return quest
+        if quest_id is not None:
+            quest = get_question(self.db, quest_id)
+            return quest
+        else:
+            return None
 
     def edit_specialty(self, tg_user_id: int, new_specialty: Specialty) -> None:
         if is_tg_user_already_exist(self.db, tg_user_id):

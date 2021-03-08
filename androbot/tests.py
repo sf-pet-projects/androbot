@@ -3,7 +3,7 @@ import datetime
 from dateutil import tz
 
 from androbot.actions import Actions, get_main_menu, start_new_test
-from androbot.errors import UserExistsException, UserNotExistsException
+from androbot.errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
 from androbot.schemas import Answer, EventsLog, Question, TelegramUser
 from androbot.types_ import AnswerTypes, Events, Specialty
 from androbot.utils import Utils
@@ -17,7 +17,6 @@ def test_start_new_test():
     assert start_new_test() == [
         AnswerTypes.VOICE.value,
         AnswerTypes.TEXT.value,
-        AnswerTypes.MENTAL.value,
     ]
 
 
@@ -57,6 +56,7 @@ def test_add_already_exist_user():
         Actions().add_user(user)
         assert False
     except UserExistsException:
+        Actions().remove_user(user)
         assert True
 
 
@@ -166,12 +166,12 @@ def test_add_event():
     MSC = tz.gettz("Europe/Moscow")
     event = EventsLog(
         tg_user_id=user.tg_user_id,
-        event_type=Events.send_solution,
+        event_type=Events.SendSolution,
         datetime=datetime.datetime.now(tz=MSC),
         param1=Specialty.ANDROID.value,
         param2=Utils.get_random_number(5),
         param3=Utils.get_random_number(5),
-        param4=AnswerTypes.MENTAL.value,
+        param4=AnswerTypes.VOICE.value,
     )
     Actions().add_event(event)
     Actions().remove_user(user)
@@ -224,3 +224,38 @@ def test_no_add_answer_with_empty_text():
     assert Actions().add_answer(answer2) is None
     Actions().remove_user(user)
     Actions().remove_questions("test")
+
+
+def test_has_started_test():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username=Utils.get_random_text(10),
+        specialty="test",
+    )
+    question = Question(
+        question_type="test",
+        question_category=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
+        text_answer=Utils.get_random_text(10),
+    )
+    Actions().add_user(user)
+    assert Actions().has_started_test(user.tg_user_id) is False
+    Actions().add_question(question)
+    Actions().get_next_test(user.tg_user_id)
+    assert Actions().has_started_test(user.tg_user_id) is True
+    answer = Answer(
+        quest_id=question.id,
+        tg_user_id=user.tg_user_id,
+        answer_type=start_new_test()[1],
+        text_answer="   ",
+        link_to_audio_answer=Utils.get_random_text(50),
+    )
+    Actions().add_answer(answer)
+    try:
+        Actions().get_next_test(user.tg_user_id)
+        assert False
+    except NoNewQuestionsException:
+        Actions().remove_user(user)
+        Actions().remove_questions("test")
+        assert True
