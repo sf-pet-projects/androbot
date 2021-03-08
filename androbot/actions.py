@@ -8,7 +8,7 @@ from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
 from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
-from .models import Question, TelegramUser, Answer
+from .models import Answer, Question, TelegramUser
 from .types_ import AnswerTypes, Specialty
 
 
