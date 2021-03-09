@@ -1,6 +1,6 @@
 import datetime
-import pytest
 
+import pytest
 from dateutil import tz
 
 from androbot.actions import Actions, get_main_menu, start_new_test
