@@ -197,10 +197,11 @@ def test_no_add_answer_with_empty_text():
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
-    Actions().add_user(user)
-    Actions().add_question(question1)
-    Actions().add_question(question2)
-    Actions().add_question(question3)
+    with Actions() as act:
+        act.add_user(user)
+        act.add_question(question1)
+        act.add_question(question2)
+        act.add_question(question3)
     answer1 = Answer(
         quest_id=question1.id,
         tg_user_id=user.tg_user_id,
