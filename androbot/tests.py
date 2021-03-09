@@ -1,4 +1,5 @@
 import datetime
+import pytest
 
 from dateutil import tz
 
@@ -52,12 +53,9 @@ def test_add_already_exist_user():
         specialty=Specialty.ANDROID.value,
     )
     Actions().add_user(user)
-    try:
+    with pytest.raises(UserExistsException):
         Actions().add_user(user)
-        assert False
-    except UserExistsException:
-        Actions().remove_user(user)
-        assert True
+    Actions().remove_user(user)
 
 
 def test_remove_not_exist_user():
@@ -67,11 +65,8 @@ def test_remove_not_exist_user():
         username=Utils.get_random_text(10),
         specialty=Specialty.ANDROID.value,
     )
-    try:
+    with pytest.raises(UserNotExistsException):
         Actions().remove_user(user)
-        assert False
-    except UserNotExistsException:
-        assert True
 
 
 def test_get_next_test():
@@ -252,13 +247,10 @@ def test_has_started_test():
         link_to_audio_answer=Utils.get_random_text(50),
     )
     Actions().add_answer(answer)
-    try:
+    with pytest.raises(NoNewQuestionsException):
         Actions().get_next_test(user.tg_user_id)
-        assert False
-    except NoNewQuestionsException:
-        Actions().remove_user(user)
-        Actions().remove_questions("test")
-        assert True
+    Actions().remove_user(user)
+    Actions().remove_questions("test")
 
 
 def test_start_test_after_reset_session():
