@@ -1,4 +1,4 @@
 *Вопрос:*  
 [[{question_category}]] {question}  
 
-👉 *Отправь свой ответ _{call_to_action}_*.
+👉 _Отправь свой ответ_ *{call_to_action}*.

@@ -1,5 +1,6 @@
 from aiogram import types as aiotypes
 from aiogram.dispatcher import FSMContext
+from loguru import logger
 
 from . import schemas, views
 from .actions import Actions, start_new_test
@@ -93,6 +94,7 @@ async def reset_test_progress(message: aiotypes.Message, state: FSMContext):
     log_event(message.from_user.id, Events.ResetProgress, state_data["speciality"])
 
     # TODO: Вызывать процедуру сброса ответов
+    logger.error("Function reset_progress hasn't realized")
 
     await bot.send_message(
         text="Пока не реализовано",
@@ -143,7 +145,7 @@ async def after_select_answer_type(message: aiotypes.Message, state: FSMContext)
         await message.reply("Ты выбрал некорректный вариант. Попробуй еще раз.", reply=False)
         return
 
-    view = views.get_android_developer_init_view(answer_type)
+    view = views.get_are_you_ready_for_test_view(answer_type)
 
     await bot.send_message(
         text=view.text,
@@ -211,12 +213,14 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
         await DialogueStates.NO_NEW_QUESTIONS.set()
 
 
-@dp.message_handler(text="Не понял вопрос", state=DialogueStates.ASK_QUESTION)
-async def do_not_understand_question(message: aiotypes.Message):
+@dp.message_handler(regexp="Не понял вопрос", state=DialogueStates.ASK_QUESTION)
+async def do_not_understand_question(message: aiotypes.Message, state: FSMContext):
     """
     Если нажал кнопку "Не понял вопрос"
     """
-    view = views.get_do_not_understand_question()
+    state_data = await state.get_data()
+
+    view = views.get_do_not_understand_question(state_data["answer_type"])
 
     await bot.send_message(
         text=view.text,
@@ -228,13 +232,37 @@ async def do_not_understand_question(message: aiotypes.Message):
     await DialogueStates.DO_NOT_UNDERSTAND_1.set()
 
 
-@dp.message_handler(state=DialogueStates.DO_NOT_UNDERSTAND_1)
-async def why_do_not_understand(message: aiotypes.Message):
+@dp.message_handler(regexp="Все равно не понятно", state=DialogueStates.DO_NOT_UNDERSTAND_1)
+async def still_not_understand(message: aiotypes.Message):
+    """
+    После доп.описания все равно вопрос не понетян
+    """
+
+    view = views.get_still_not_understand()
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await DialogueStates.next()
+
+
+@dp.message_handler(state=DialogueStates.DO_NOT_UNDERSTAND_2)
+async def why_do_not_understand(message: aiotypes.Message, state: FSMContext):
     """
     Получили описание, почему вопрос не понятен
     """
-    if message.text != "Отмена":
-        pass  # TODO: записать что непонятного в вопросе
+    state_data = await state.get_data()
+    log_event(
+        message.from_user.id,
+        Events.Unclear,
+        state_data["speciality"],
+        state_data["question_id"],
+        message.text,
+    )
 
     view = views.get_why_do_not_understand()
 

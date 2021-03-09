@@ -30,9 +30,12 @@ def get_do_you_want_to_reset_test_view() -> View:
     Возвращает View в котором спрашивает, нужно ли продолжить начатный тест, или начать сначала
     """
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.add(aiotypes.KeyboardButton("🏠 Главное меню"))
-    reply_kb.add(aiotypes.KeyboardButton("🔄 Начать с начала"))
-    reply_kb.add(aiotypes.KeyboardButton("✅ Продолжить"))
+    row_buttons = [
+        aiotypes.KeyboardButton("🏠 Главное меню"),
+        aiotypes.KeyboardButton("🔄 Начать с начала"),
+        aiotypes.KeyboardButton("✅ Продолжить"),
+    ]
+    reply_kb.row(*row_buttons)
 
     return View(get_template("03_do_you_want_to_reset_test"), reply_kb)
 
@@ -42,26 +45,27 @@ def get_select_answer_type_view() -> View:
     Возвращает View в котором предлагает ответить, каким способом пользователь предпочитает отвечать
     """
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    for answer_type in actions.start_new_test():
+    row_buttons = []
+    for answer_type in reversed(actions.start_new_test()):
         btn = aiotypes.KeyboardButton(answer_type)
-        reply_kb.add(btn)
+        row_buttons.append(btn)
+    reply_kb.row(*row_buttons)
 
     return View(get_template("04_select_answer_type"), reply_kb)
 
 
-def get_android_developer_init_view(answer_type: str) -> View:
+def get_are_you_ready_for_test_view(answer_type: str) -> View:
     """
     Возвращает View стартового экрана тестирования по специальности Андроид разработчик
     """
-    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.row(aiotypes.KeyboardButton("🚫 Отмена"), aiotypes.KeyboardButton("✅ Готов!"))
-
     if answer_type == AnswerTypes.TEXT.value:
         answer_way = "отправкой текста"
     elif answer_type == AnswerTypes.VOICE.value:
         answer_way = "отправкой голосового сообщения"
+    answer_text = render_message(get_template("09_are_you_ready_for_test"), answer_way=answer_way)
 
-    answer_text = render_message(get_template("09_android_developer"), answer_way=answer_way)
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    reply_kb.row(aiotypes.KeyboardButton("🚫 Отмена"), aiotypes.KeyboardButton("✅ Готов!"))
 
     return View(answer_text, reply_kb)
 
@@ -92,7 +96,10 @@ def get_next_question(tg_user_id: int, answer_type: str) -> View:
         call_to_action=call_to_action,
     )
 
-    row_buttons = [aiotypes.KeyboardButton("Не понял вопрос")]
+    row_buttons = [
+        aiotypes.KeyboardButton("🤷‍♂️Не понял вопрос"),
+        aiotypes.KeyboardButton("🙅🏻‍♀️ Не знаю ответ"),
+    ]
 
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     reply_kb.row(*row_buttons)
@@ -100,25 +107,49 @@ def get_next_question(tg_user_id: int, answer_type: str) -> View:
     return View(answer_text, reply_kb, question.id)
 
 
-def get_do_not_understand_question() -> View:
+def get_do_not_understand_question(answer_type) -> View:
     """
     Возвращает View с просбой написать что не понятного
     """
-    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.add(aiotypes.KeyboardButton("Отмена"))
+    if answer_type == AnswerTypes.TEXT.value:
+        call_to_action = "текстом"
+    elif answer_type == AnswerTypes.VOICE.value:
+        call_to_action = "голосом"
 
-    return View(get_template("30_do_not_understand"), reply_kb)
+    additional_info = "Тут будет доп.информация"
+
+    answer_text = render_message(
+        get_template("30_do_not_understand"),
+        additional_info=additional_info,
+        call_to_action=call_to_action,
+    )
+    row_buttons = [
+        aiotypes.KeyboardButton("🤷‍♂️Все равно не понятно"),
+        aiotypes.KeyboardButton("🙅🏻‍♀️ Не знаю ответ"),
+    ]
+
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    reply_kb.row(*row_buttons)
+
+    return View(answer_text, reply_kb)
+
+
+def get_still_not_understand() -> View:
+    """
+    Возвращает View с просбой написать что не понятного
+    """
+    return View(get_template("31_still_not_understand"))
 
 
 def get_why_do_not_understand() -> View:
     """
-    Возвращает View с просбой написать что не понятного
+    Возвращает View после отправки сообщения что не понятно
     """
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     reply_kb.add(aiotypes.KeyboardButton("🏠 Главное меню"))
     reply_kb.add(aiotypes.KeyboardButton("Решить другую задачу"))
 
-    return View(get_template("31_why_do_not_understand"), reply_kb)
+    return View(get_template("32_why_do_not_understand"), reply_kb)
 
 
 def get_correct_answer(tg_user_id: int) -> View:
