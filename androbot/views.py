@@ -104,7 +104,7 @@ def get_next_question(tg_user_id: int, answer_type: str) -> View:
     )
 
     row_buttons = [
-        aiotypes.KeyboardButton("🤷‍♂️Не понял вопрос"),
+        aiotypes.KeyboardButton("🤷‍♂️ Не понял вопрос"),
         aiotypes.KeyboardButton("🙅🏻‍♀️ Не знаю ответ"),
     ]
 
