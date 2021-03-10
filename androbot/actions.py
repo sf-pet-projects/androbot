@@ -8,7 +8,7 @@ from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
 from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
-from .models import Question, TelegramUser
+from .models import Answer, Question, TelegramUser
 from .types_ import AnswerTypes, Specialty
 
 
@@ -58,20 +58,20 @@ class Actions:
         crud.add_event(self.db, event)
         logger.info("Add event {}", event)
 
-    def add_question(self, question: schemas.Question) -> TelegramUser:
-        db_user = crud.add_question(self.db, question)
+    def add_question(self, question: schemas.Question) -> Question:
+        db_question = crud.add_question(self.db, question)
         logger.info("Add question {}", question)
-        return db_user
+        return db_question
 
-    def add_answer(self, answer: schemas.Answer) -> Optional[TelegramUser]:
+    def add_answer(self, answer: schemas.Answer) -> Optional[Answer]:
         has_text_answer = answer.text_answer is not None and answer.text_answer.strip()
         has_voice_answer = (
             answer.link_to_audio_answer is not None and answer.link_to_audio_answer.strip()
         )
         if has_text_answer or has_voice_answer:
-            db_user = crud.add_answer(self.db, answer)
-            logger.info("Add new user's answer {}", answer)
-            return db_user
+            db_answer = crud.add_answer(self.db, answer)
+            logger.info("Add new user's answer {}", db_answer)
+            return db_answer
         return None
 
     def remove_questions(self, specialty: str) -> None:
@@ -97,7 +97,7 @@ class Actions:
     def has_started_test(self, tg_user_id: int) -> bool:
         return crud.get_current_question(self.db, tg_user_id) is not None
 
-    def get_test_result(self, tg_user_id: int) -> Optional[Question]:
+    def get_current_question(self, tg_user_id: int) -> Optional[Question]:
         quest_id = crud.get_current_question(self.db, tg_user_id)
         if quest_id is not None:
             quest = get_question(self.db, quest_id)
@@ -111,7 +111,7 @@ class Actions:
         else:
             raise UserNotExistsException("You try to add specialty for not exist user")
 
-    def load_questions(self, specialty: Specialty, file: str):
+    def load_questions(self, specialty: Specialty, file: str) -> None:
         with open(file, encoding="utf-8") as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=";")
             line_count = 0
@@ -128,3 +128,7 @@ class Actions:
                         additional_info=row[3],
                     )
                 )
+
+    def reset_session(self, user: schemas.TelegramUser) -> None:
+        crud.remove_answers(self.db, user.tg_user_id)
+        crud.remove_sessions(self.db, user.tg_user_id)
