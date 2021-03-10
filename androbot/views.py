@@ -131,7 +131,7 @@ def get_do_not_understand_question(answer_type) -> View:
         call_to_action=call_to_action,
     )
     row_buttons = [
-        aiotypes.KeyboardButton("🤷‍♂️Все равно не понятно"),
+        aiotypes.KeyboardButton("🤷‍♂️ Все равно не понятно"),
         aiotypes.KeyboardButton("🙅🏻‍♀️ Не знаю ответ"),
     ]
 
