@@ -1,6 +1,5 @@
 from aiogram import types as aiotypes
 from aiogram.dispatcher import FSMContext
-from loguru import logger
 
 from . import schemas, views
 from .actions import Actions, start_new_test
@@ -93,13 +92,21 @@ async def reset_test_progress(message: aiotypes.Message, state: FSMContext):
     state_data = await state.get_data()
     log_event(message.from_user.id, Events.ResetProgress, state_data["speciality"])
 
-    # TODO: Вызывать процедуру сброса ответов
-    logger.error("Function reset_progress hasn't realized")
+    with Actions() as act:
+        tg_user = schemas.TelegramUser(
+            tg_user_id=message.from_user.id,
+            name=message.from_user.username,
+            username=message.from_user.username,
+        )
+        act.reset_session(tg_user)
+
+    view = views.get_resetting_test_view()
 
     await bot.send_message(
-        text="Пока не реализовано",
+        text=view.text,
         chat_id=message.chat.id,
         parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
     )
 
     await select_answer_type(message)
@@ -278,7 +285,7 @@ async def why_do_not_understand(message: aiotypes.Message, state: FSMContext):
 
 @dp.message_handler(
     content_types=[aiotypes.ContentType.TEXT, aiotypes.ContentType.VOICE],
-    state=DialogueStates.ASK_QUESTION,
+    state=[DialogueStates.ASK_QUESTION, DialogueStates.DO_NOT_UNDERSTAND_1],
 )
 async def get_answer(message: aiotypes.Message, state: FSMContext):
     """

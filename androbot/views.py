@@ -40,6 +40,13 @@ def get_do_you_want_to_reset_test_view() -> View:
     return View(get_template("03_do_you_want_to_reset_test"), reply_kb)
 
 
+def get_resetting_test_view() -> View:
+    """
+    Возвращает View в котором уведомляет о сбросе тестирования
+    """
+    return View(get_template("04_resetting_test"))
+
+
 def get_select_answer_type_view() -> View:
     """
     Возвращает View в котором предлагает ответить, каким способом пользователь предпочитает отвечать
@@ -51,7 +58,7 @@ def get_select_answer_type_view() -> View:
         row_buttons.append(btn)
     reply_kb.row(*row_buttons)
 
-    return View(get_template("04_select_answer_type"), reply_kb)
+    return View(get_template("05_select_answer_type"), reply_kb)
 
 
 def get_are_you_ready_for_test_view(answer_type: str) -> View:
