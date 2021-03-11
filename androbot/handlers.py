@@ -52,15 +52,81 @@ async def send_start_screen(message: aiotypes.Message):
 
 
 @dp.message_handler(regexp="Android Developer", state=DialogueStates.MAIN_MENU)
-async def show_select_answer_type(message: aiotypes.Message, state: FSMContext):
+async def after_select_speciality(message: aiotypes.Message, state: FSMContext):
     """
-    Предагаем выбрать вариант ответа
+    Проверяем что тест еще не начат.
+    Предагаем выбрать cпособ ответа
     """
 
     new_speciality = Specialty.ANDROID
 
+    await state.update_data(speciality=new_speciality.value)
+
+    log_event(message.from_user.id, Events.Speciality, new_speciality.value)
+
     with Actions() as act:
         act.edit_specialty(message.from_user.id, new_speciality)
+
+        if act.has_started_test(message.from_user.id):
+            view = views.get_do_you_want_to_reset_test_view()
+
+            await bot.send_message(
+                text=view.text,
+                chat_id=message.chat.id,
+                parse_mode=aiotypes.ParseMode.MARKDOWN,
+                reply_markup=view.markup,
+            )
+
+            log_event(message.from_user.id, Events.AlreadyTried, new_speciality.value)
+
+            await DialogueStates.next()
+        else:
+            await select_answer_type(message)
+
+
+@dp.message_handler(regexp="Начать с начала", state=DialogueStates.HAS_STARTED_TEST)
+async def reset_test_progress(message: aiotypes.Message, state: FSMContext):
+    """
+    Сбрасываем отвеченные вопросы, и начинаем отвечать заново
+    """
+    state_data = await state.get_data()
+    log_event(message.from_user.id, Events.ResetProgress, state_data["speciality"])
+
+    with Actions() as act:
+        tg_user = schemas.TelegramUser(
+            tg_user_id=message.from_user.id,
+            name=message.from_user.username,
+            username=message.from_user.username,
+        )
+        act.reset_session(tg_user)
+
+    view = views.get_resetting_test_view()
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await select_answer_type(message)
+
+
+@dp.message_handler(regexp="Продолжить", state=DialogueStates.HAS_STARTED_TEST)
+async def continue_test(message: aiotypes.Message, state: FSMContext):
+    """
+    Продолжаем отвечать на вопросы теста
+    """
+    state_data = await state.get_data()
+    log_event(message.from_user.id, Events.ContinueTask, state_data["speciality"])
+
+    await select_answer_type(message)
+
+
+async def select_answer_type(message: aiotypes.Message):
+    """
+    Предлагает выбрать способ ответа на вопросы
+    """
 
     view = views.get_select_answer_type_view()
 
@@ -71,15 +137,11 @@ async def show_select_answer_type(message: aiotypes.Message, state: FSMContext):
         reply_markup=view.markup,
     )
 
-    await state.update_data(speciality=new_speciality.value)
-
-    log_event(message.from_user.id, Events.Speciality, new_speciality.value)
-
-    await DialogueStates.next()
+    await DialogueStates.SELECT_ANSWER_TYPE.set()
 
 
 @dp.message_handler(state=DialogueStates.SELECT_ANSWER_TYPE)
-async def show_call_to_start_test(message: aiotypes.Message, state: FSMContext):
+async def after_select_answer_type(message: aiotypes.Message, state: FSMContext):
     """
     Проверяем что-за вариант ответа он выбрал.
     Если ОК, задаем первый вопрос.
@@ -90,7 +152,7 @@ async def show_call_to_start_test(message: aiotypes.Message, state: FSMContext):
         await message.reply("Ты выбрал некорректный вариант. Попробуй еще раз.", reply=False)
         return
 
-    view = views.get_android_developer_init_view(answer_type)
+    view = views.get_are_you_ready_for_test_view(answer_type)
 
     await bot.send_message(
         text=view.text,
@@ -107,10 +169,11 @@ async def show_call_to_start_test(message: aiotypes.Message, state: FSMContext):
     await DialogueStates.next()
 
 
-@dp.message_handler(regexp="Отмена", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
-@dp.message_handler(text="Главное меню", state=DialogueStates.GOT_ANSWER)
-@dp.message_handler(text="Главное меню", state=DialogueStates.NO_NEW_QUESTIONS)
-@dp.message_handler(text="Главное меню", state=DialogueStates.DO_NOT_UNDERSTAND_2)
+@dp.message_handler(regexp="Отмена", state=DialogueStates.ARE_YOU_READY_FOR_TEST)
+@dp.message_handler(regexp="Главное меню", state=DialogueStates.GOT_ANSWER)
+@dp.message_handler(regexp="Главное меню", state=DialogueStates.HAS_STARTED_TEST)
+@dp.message_handler(regexp="Главное меню", state=DialogueStates.NO_NEW_QUESTIONS)
+@dp.message_handler(regexp="Главное меню", state=DialogueStates.DO_NOT_UNDERSTAND_2)
 async def back_to_main_menu(message: aiotypes.Message):
     """
     Возвращаемся в главное меню
@@ -124,10 +187,12 @@ async def back_to_main_menu(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
+    log_event(message.from_user.id, Events.Start)
+
     await DialogueStates.MAIN_MENU.set()
 
 
-@dp.message_handler(regexp="Готов!", state=DialogueStates.ANDROID_DEVELOPER_INIT_VIEW)
+@dp.message_handler(regexp="Готов!", state=DialogueStates.ARE_YOU_READY_FOR_TEST)
 @dp.message_handler(text="Решить другую задачу", state=DialogueStates.GOT_ANSWER)
 @dp.message_handler(text="Решить другую задачу", state=DialogueStates.DO_NOT_UNDERSTAND_2)
 async def get_another_question(message: aiotypes.Message, state: FSMContext):
@@ -155,12 +220,14 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
         await DialogueStates.NO_NEW_QUESTIONS.set()
 
 
-@dp.message_handler(text="Не понял вопрос", state=DialogueStates.ASK_QUESTION)
-async def do_not_understand_question(message: aiotypes.Message):
+@dp.message_handler(regexp="Не понял вопрос", state=DialogueStates.ASK_QUESTION)
+async def do_not_understand_question(message: aiotypes.Message, state: FSMContext):
     """
     Если нажал кнопку "Не понял вопрос"
     """
-    view = views.get_do_not_understand_question()
+    state_data = await state.get_data()
+
+    view = views.get_do_not_understand_question(state_data["answer_type"])
 
     await bot.send_message(
         text=view.text,
@@ -172,13 +239,37 @@ async def do_not_understand_question(message: aiotypes.Message):
     await DialogueStates.DO_NOT_UNDERSTAND_1.set()
 
 
-@dp.message_handler(state=DialogueStates.DO_NOT_UNDERSTAND_1)
-async def why_do_not_understand(message: aiotypes.Message):
+@dp.message_handler(regexp="Все равно не понятно", state=DialogueStates.DO_NOT_UNDERSTAND_1)
+async def still_not_understand(message: aiotypes.Message):
+    """
+    После доп.описания все равно вопрос не понетян
+    """
+
+    view = views.get_still_not_understand()
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await DialogueStates.next()
+
+
+@dp.message_handler(state=DialogueStates.DO_NOT_UNDERSTAND_2)
+async def why_do_not_understand(message: aiotypes.Message, state: FSMContext):
     """
     Получили описание, почему вопрос не понятен
     """
-    if message.text != "Отмена":
-        pass  # TODO: записать что непонятного в вопросе
+    state_data = await state.get_data()
+    log_event(
+        message.from_user.id,
+        Events.Unclear,
+        state_data["speciality"],
+        state_data["question_id"],
+        message.text,
+    )
 
     view = views.get_why_do_not_understand()
 
@@ -194,7 +285,7 @@ async def why_do_not_understand(message: aiotypes.Message):
 
 @dp.message_handler(
     content_types=[aiotypes.ContentType.TEXT, aiotypes.ContentType.VOICE],
-    state=DialogueStates.ASK_QUESTION,
+    state=[DialogueStates.ASK_QUESTION, DialogueStates.DO_NOT_UNDERSTAND_1],
 )
 async def get_answer(message: aiotypes.Message, state: FSMContext):
     """
