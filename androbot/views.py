@@ -1,4 +1,5 @@
 import aiogram.types as aiotypes
+from loguru import logger
 
 from . import actions
 from .errors import NoNewQuestionsException
@@ -123,6 +124,7 @@ def get_do_not_understand_question(answer_type) -> View:
     elif answer_type == AnswerTypes.VOICE.value:
         call_to_action = "голосом"
 
+    logger.warning("Не реализован метод get_additional_info")
     additional_info = "Тут будет доп.информация"
 
     answer_text = render_message(
