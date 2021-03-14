@@ -63,11 +63,6 @@ class Actions:
         logger.info("Add question {}", question)
         return db_question
 
-    def add_additional_info_for_question(self, question_id: int, additional_info: str) -> Question:
-        db_question = crud.add_additional_info_for_question(self.db, question_id, additional_info)
-        logger.info("Add additional info {} for question {}", additional_info, question_id)
-        return db_question
-
     def add_answer(self, answer: schemas.Answer) -> Optional[Answer]:
         has_text_answer = answer.text_answer is not None and answer.text_answer.strip()
         has_voice_answer = (
@@ -78,6 +73,11 @@ class Actions:
             logger.info("Add new user's answer {}", db_answer)
             return db_answer
         return None
+
+    def add_additional_info_for_question(self, question_id: int, additional_info: str) -> Question:
+        db_question = crud.add_additional_info_for_question(self.db, question_id, additional_info)
+        logger.info("Add additional info {} for question {}", additional_info, question_id)
+        return db_question
 
     def remove_questions(self, specialty: str) -> None:
         crud.remove_questions(self.db, specialty)
