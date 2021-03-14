@@ -77,6 +77,15 @@ def add_question(db: Session, question: schemas.Question) -> Question:
     return db_question
 
 
+def add_additional_info_for_question(db: Session, question_id: int, info: str) -> Question:
+    db_question = db.query(Question).filter(Question.id == question_id).first()
+    db_question.additional_info = info
+    db.add(db_question)
+    db.commit()
+    db.refresh(db_question)
+    return db_question
+
+
 def remove_tg_user(db: Session, tg_user_id: int) -> None:
     db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).delete()
     db.commit()

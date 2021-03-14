@@ -282,3 +282,29 @@ def test_start_test_after_reset_session():
     assert Actions().get_next_test(user.tg_user_id).text_question == question.text_question
     Actions().remove_user(user)
     Actions().remove_questions("test")
+
+
+def test_add_additional_info_for_question():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username=Utils.get_random_text(10),
+        specialty="test",
+    )
+    question = Question(
+        question_type="test",
+        question_category=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
+        text_answer=Utils.get_random_text(10),
+    )
+    Actions().add_user(user)
+    Actions().add_question(question)
+    additional_info = "Доп инфа по вопросу"
+    assert question.additional_info is None
+    Actions().add_additional_info_for_question(
+        question_id=question.id, additional_info=additional_info
+    )
+    next_question = Actions().get_next_test(tg_user_id=user.tg_user_id)
+    assert next_question.additional_info == additional_info
+    Actions().remove_user(user)
+    Actions().remove_questions("test")
