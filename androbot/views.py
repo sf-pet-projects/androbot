@@ -148,9 +148,10 @@ def get_correct_answer(tg_user_id: int) -> View:
     answer_text = render_message(get_template("40_correct_answer"), correct_answer=correct_answer)
 
     row_buttons = [
-        aiotypes.KeyboardButton("🏠️ Главное меню"),
-        aiotypes.KeyboardButton("Решить другую задачу"),
+        aiotypes.KeyboardButton("📚 Отправь материалы"),
+        aiotypes.KeyboardButton("➡️Следующий вопрос"),
     ]
+
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     reply_kb.row(*row_buttons)
 
