@@ -149,7 +149,7 @@ def get_correct_answer(tg_user_id: int) -> View:
 
     row_buttons = [
         aiotypes.KeyboardButton("📚 Отправь материалы"),
-        aiotypes.KeyboardButton("➡️Следующий вопрос"),
+        aiotypes.KeyboardButton("➡️ Следующий вопрос"),
     ]
 
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
