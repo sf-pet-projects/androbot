@@ -173,7 +173,6 @@ async def after_select_answer_type(message: aiotypes.Message, state: FSMContext)
 @dp.message_handler(regexp="Главное меню", state=DialogueStates.GOT_ANSWER)
 @dp.message_handler(regexp="Главное меню", state=DialogueStates.HAS_STARTED_TEST)
 @dp.message_handler(regexp="Главное меню", state=DialogueStates.NO_NEW_QUESTIONS)
-@dp.message_handler(regexp="Главное меню", state=DialogueStates.DO_NOT_UNDERSTAND_2)
 async def back_to_main_menu(message: aiotypes.Message):
     """
     Возвращаемся в главное меню
@@ -193,8 +192,7 @@ async def back_to_main_menu(message: aiotypes.Message):
 
 
 @dp.message_handler(regexp="Готов!", state=DialogueStates.ARE_YOU_READY_FOR_TEST)
-@dp.message_handler(text="Решить другую задачу", state=DialogueStates.GOT_ANSWER)
-@dp.message_handler(text="Решить другую задачу", state=DialogueStates.DO_NOT_UNDERSTAND_2)
+@dp.message_handler(regexp="Следующий вопрос", state=DialogueStates.GOT_ANSWER)
 async def get_another_question(message: aiotypes.Message, state: FSMContext):
     """
     Выдать пользователю задачу
@@ -221,13 +219,12 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
 
 
 @dp.message_handler(regexp="Не понял вопрос", state=DialogueStates.ASK_QUESTION)
-async def do_not_understand_question(message: aiotypes.Message, state: FSMContext):
+async def not_understand_question(message: aiotypes.Message):
     """
-    Если нажал кнопку "Не понял вопрос"
+    Пользователю не понятен вопрос, спросим почему не понятен
     """
-    state_data = await state.get_data()
 
-    view = views.get_do_not_understand_question(state_data["answer_type"])
+    view = views.get_why_do_not_understand()
 
     await bot.send_message(
         text=view.text,
@@ -236,29 +233,11 @@ async def do_not_understand_question(message: aiotypes.Message, state: FSMContex
         reply_markup=view.markup,
     )
 
-    await DialogueStates.DO_NOT_UNDERSTAND_1.set()
+    await DialogueStates.DO_NOT_UNDERSTAND.set()
 
 
-@dp.message_handler(regexp="Все равно не понятно", state=DialogueStates.DO_NOT_UNDERSTAND_1)
-async def still_not_understand(message: aiotypes.Message):
-    """
-    После доп.описания все равно вопрос не понетян
-    """
-
-    view = views.get_still_not_understand()
-
-    await bot.send_message(
-        text=view.text,
-        chat_id=message.chat.id,
-        parse_mode=aiotypes.ParseMode.MARKDOWN,
-        reply_markup=view.markup,
-    )
-
-    await DialogueStates.next()
-
-
-@dp.message_handler(state=DialogueStates.DO_NOT_UNDERSTAND_2)
-async def why_do_not_understand(message: aiotypes.Message, state: FSMContext):
+@dp.message_handler(state=DialogueStates.DO_NOT_UNDERSTAND)
+async def get_why_not_understand_question(message: aiotypes.Message, state: FSMContext):
     """
     Получили описание, почему вопрос не понятен
     """
@@ -271,7 +250,7 @@ async def why_do_not_understand(message: aiotypes.Message, state: FSMContext):
         message.text,
     )
 
-    view = views.get_why_do_not_understand()
+    view = views.get_thanks_for_question_feedback_view()
 
     await bot.send_message(
         text=view.text,
@@ -280,12 +259,12 @@ async def why_do_not_understand(message: aiotypes.Message, state: FSMContext):
         reply_markup=view.markup,
     )
 
-    await DialogueStates.next()
+    await DialogueStates.GOT_ANSWER.set()
 
 
 @dp.message_handler(
     content_types=[aiotypes.ContentType.TEXT, aiotypes.ContentType.VOICE],
-    state=[DialogueStates.ASK_QUESTION, DialogueStates.DO_NOT_UNDERSTAND_1],
+    state=DialogueStates.ASK_QUESTION,
 )
 async def get_answer(message: aiotypes.Message, state: FSMContext):
     """

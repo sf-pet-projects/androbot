@@ -114,49 +114,25 @@ def get_next_question(tg_user_id: int, answer_type: str) -> View:
     return View(answer_text, reply_kb, question.id)
 
 
-def get_do_not_understand_question(answer_type) -> View:
-    """
-    Возвращает View с просбой написать что не понятного
-    """
-    if answer_type == AnswerTypes.TEXT.value:
-        call_to_action = "текстом"
-    elif answer_type == AnswerTypes.VOICE.value:
-        call_to_action = "голосом"
-
-    additional_info = "Тут будет доп.информация"
-
-    answer_text = render_message(
-        get_template("30_do_not_understand"),
-        additional_info=additional_info,
-        call_to_action=call_to_action,
-    )
-    row_buttons = [
-        aiotypes.KeyboardButton("🤷‍♂️ Все равно не понятно"),
-        aiotypes.KeyboardButton("🙅🏻‍♀️ Не знаю ответ"),
-    ]
-
-    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.row(*row_buttons)
-
-    return View(answer_text, reply_kb)
-
-
-def get_still_not_understand() -> View:
-    """
-    Возвращает View с просбой написать что не понятного
-    """
-    return View(get_template("31_still_not_understand"))
-
-
 def get_why_do_not_understand() -> View:
+    """
+    Возвращает View с просбой написать что не понятного
+    """
+    return View(get_template("31_why_do_not_understand"))
+
+
+def get_thanks_for_question_feedback_view() -> View:
     """
     Возвращает View после отправки сообщения что не понятно
     """
+    row_buttons = [
+        aiotypes.KeyboardButton("🏠️ Главное меню"),
+        aiotypes.KeyboardButton("Решить другую задачу"),
+    ]
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.add(aiotypes.KeyboardButton("🏠 Главное меню"))
-    reply_kb.add(aiotypes.KeyboardButton("Решить другую задачу"))
+    reply_kb.row(*row_buttons)
 
-    return View(get_template("32_why_do_not_understand"), reply_kb)
+    return View(get_template("32_thanks_for_your_question_feedback"), reply_kb)
 
 
 def get_correct_answer(tg_user_id: int) -> View:
@@ -171,8 +147,12 @@ def get_correct_answer(tg_user_id: int) -> View:
 
     answer_text = render_message(get_template("40_correct_answer"), correct_answer=correct_answer)
 
+    row_buttons = [
+        aiotypes.KeyboardButton("📚 Отправь материалы"),
+        aiotypes.KeyboardButton("➡️ Следующий вопрос"),
+    ]
+
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.add(aiotypes.KeyboardButton("🏠 Главное меню"))
-    reply_kb.add(aiotypes.KeyboardButton("Решить другую задачу"))
+    reply_kb.row(*row_buttons)
 
     return View(answer_text, reply_kb)
