@@ -121,20 +121,6 @@ def get_why_do_not_understand() -> View:
     return View(get_template("31_why_do_not_understand"))
 
 
-def get_thanks_for_question_feedback_view() -> View:
-    """
-    Возвращает View после отправки сообщения что не понятно
-    """
-    row_buttons = [
-        aiotypes.KeyboardButton("🏠️ Главное меню"),
-        aiotypes.KeyboardButton("Решить другую задачу"),
-    ]
-    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.row(*row_buttons)
-
-    return View(get_template("32_thanks_for_your_question_feedback"), reply_kb)
-
-
 def get_correct_answer(tg_user_id: int) -> View:
     """
     Возвращает View с правильным ответом
@@ -149,7 +135,25 @@ def get_correct_answer(tg_user_id: int) -> View:
 
     row_buttons = [
         aiotypes.KeyboardButton("📚 Отправь материалы"),
-        aiotypes.KeyboardButton("➡️ Следующий вопрос"),
+        aiotypes.KeyboardButton("➡️Следующий вопрос"),
+    ]
+
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    reply_kb.row(*row_buttons)
+
+    return View(answer_text, reply_kb)
+
+
+def get_do_you_want_to_get_correct_answer() -> View:
+    """
+    Возвращает View с предолжением узнать эталонный ответ, или идти дальше
+    """
+
+    answer_text = render_message(get_template("41_do_you_want_to_get_correct_answer"))
+
+    row_buttons = [
+        aiotypes.KeyboardButton("💡 Эталонный ответ"),
+        aiotypes.KeyboardButton("➡️Следующий вопрос"),
     ]
 
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
