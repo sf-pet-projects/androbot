@@ -3,7 +3,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from . import models, schemas
-from .models import Answer, CurrentSession, EventsLog, Question, TelegramUser
+from .models import Answer, BotReview, CurrentSession, EventsLog, Question, TelegramUser
 from .types_ import Specialty
 
 
@@ -108,7 +108,7 @@ def get_passed_questions(db: Session, tg_user_id: int) -> List[int]:
 
 def set_current_question(db: Session, tg_user_id: int, quest_id: int) -> Session:
     query = db.query(models.CurrentSession).filter(models.CurrentSession.tg_user_id == tg_user_id)
-    if query.count() == 1:
+    if query is not None and query.count() == 1:
         db_session = query.first()
         db_session.quest_id = quest_id
     else:
@@ -124,7 +124,7 @@ def set_current_question(db: Session, tg_user_id: int, quest_id: int) -> Session
 
 def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty) -> None:
     query = db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id)
-    if query.count() == 1:
+    if query is not None and query.count() == 1:
         db_session = query.first()
         db_session.specialty = specialty.value
         db.commit()
@@ -146,3 +146,26 @@ def get_all_questions(db: Session, specialty: str) -> List[Question]:
 
 def get_question(db: Session, quest_id: int) -> Question:
     return db.query(Question).filter(models.Question.id == quest_id).first()
+
+
+def add_bot_score(db: Session, tg_user_id: int, bot_score: int) -> BotReview:
+    db_review = db.query(BotReview).filter(models.BotReview.tg_user_id == tg_user_id).first()
+    if db_review is not None:
+        db_review.bot_score = bot_score
+        db.add(db_review)
+        db.commit()
+        db.refresh(db_review)
+        db.close()
+        return db_review
+    else:
+        bot_review = models.BotReview(tg_user_id=tg_user_id, bot_score=bot_score)
+        db.add(bot_review)
+        db.commit()
+        db.refresh(bot_review)
+        db.close()
+        return bot_review
+
+
+def get_bot_review(db: Session, tg_user_id: int) -> BotReview:
+    db_review = db.query(BotReview).filter(models.BotReview.tg_user_id == tg_user_id).first()
+    return db_review

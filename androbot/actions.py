@@ -7,8 +7,13 @@ from loguru import logger
 from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
-from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
-from .models import Answer, Question, TelegramUser
+from .errors import (
+    NoNewQuestionsException,
+    UserExistsException,
+    UserNotExistsException,
+    WrongBotScoreFormat,
+)
+from .models import Answer, BotReview, Question, TelegramUser
 from .types_ import AnswerTypes, Specialty
 
 
@@ -132,3 +137,13 @@ class Actions:
     def reset_session(self, user: schemas.TelegramUser) -> None:
         crud.remove_answers(self.db, user.tg_user_id)
         crud.remove_sessions(self.db, user.tg_user_id)
+
+    def add_bot_score(self, user: schemas.TelegramUser, bot_score: int) -> BotReview:
+        if bot_score not in range(1, 10):
+            raise WrongBotScoreFormat(
+                "You can have only 1 to 10 score in field BotReview.bot_score"
+            )
+        return crud.add_bot_score(self.db, user.tg_user_id, bot_score)
+
+    def get_bot_review(self, user: schemas.TelegramUser) -> BotReview:
+        return crud.get_bot_review(self.db, user.tg_user_id)

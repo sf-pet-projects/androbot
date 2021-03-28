@@ -4,7 +4,12 @@ import pytest
 from dateutil import tz
 
 from androbot.actions import Actions, get_main_menu, start_new_test
-from androbot.errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
+from androbot.errors import (
+    NoNewQuestionsException,
+    UserExistsException,
+    UserNotExistsException,
+    WrongBotScoreFormat,
+)
 from androbot.schemas import Answer, EventsLog, Question, TelegramUser
 from androbot.types_ import AnswerTypes, Events, Specialty
 from androbot.utils import Utils
@@ -282,3 +287,19 @@ def test_start_test_after_reset_session():
     assert Actions().get_next_test(user.tg_user_id).text_question == question.text_question
     Actions().remove_user(user)
     Actions().remove_questions("test")
+
+
+def test_add_bot_score():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username=Utils.get_random_text(10),
+        specialty="test",
+    )
+    Actions().add_user(user)
+    Actions().add_bot_score(user, 5)
+    assert Actions().get_bot_review(user).bot_score == 5
+    Actions().add_bot_score(user, 3)
+    assert Actions().get_bot_review(user).bot_score == 3
+    with pytest.raises(WrongBotScoreFormat):
+        Actions().add_bot_score(user, 15)

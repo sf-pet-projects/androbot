@@ -60,3 +60,11 @@ class EventsLog(Base):
     param3 = Column(String, unique=False, index=True)
     param4 = Column(String, unique=False, index=True)
     param5 = Column(String, unique=False, index=True)
+
+
+class BotReview(Base):
+    __tablename__ = "bot_review"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
+    tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
+    bot_score = Column(Integer, unique=False, index=True)
