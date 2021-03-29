@@ -349,12 +349,13 @@ def test_add_question_score():
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
-    Actions().add_user(user)
-    Actions().add_question(question)
-    Actions().add_question_score(question.id, user.tg_user_id, False)
-    assert Actions().get_question_score(question.id, user.tg_user_id).is_correct is False
-    Actions().add_question_score(question.id, user.tg_user_id, True)
-    assert Actions().get_question_score(question.id, user.tg_user_id).is_correct is True
-    Actions().remove_question_score(user.tg_user_id, question.id)
-    Actions().remove_user(user)
-    Actions().remove_questions("test")
+    with Actions() as act:
+        act.add_user(user)
+        act.add_question(question)
+        act.add_question_score(question.id, user.tg_user_id, False)
+        assert act.get_question_score(question.id, user.tg_user_id)[0].is_correct is False
+        act.add_question_score(question.id, user.tg_user_id, True)
+        assert act.get_question_score(question.id, user.tg_user_id)[1].is_correct is True
+        act.remove_question_score(user.tg_user_id, question.id)
+        act.remove_user(user)
+        act.remove_questions("test")
