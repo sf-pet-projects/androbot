@@ -12,9 +12,7 @@ def get_tg_users(db: Session, skip: int = 0) -> List[TelegramUser]:
 
 
 def get_tg_user(db: Session, tg_user_id: int) -> TelegramUser:
-    return (
-        db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).first()
-    )
+    return db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).first()
 
 
 def is_tg_user_already_exist(db: Session, tg_user_id: int) -> bool:
