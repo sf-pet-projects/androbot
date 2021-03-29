@@ -34,9 +34,7 @@ def main():
         choices=[s.value for s in Specialty],
         default=Specialty.ANDROID,
     )
-    parser.add_argument(
-        "-d", "--drop_questions", help="drop questions before load", action="store_true"
-    )
+    parser.add_argument("-d", "--drop_questions", help="drop questions before load", action="store_true")
     args = parser.parse_args()
 
     if not os.path.exists(args.filename):

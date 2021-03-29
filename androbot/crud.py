@@ -3,15 +3,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from . import models, schemas
-from .models import (
-    Answer,
-    BotReview,
-    CurrentSession,
-    EventsLog,
-    ProblemQuestionReview,
-    Question,
-    TelegramUser,
-)
+from .models import Answer, BotReview, CurrentSession, EventsLog, ProblemQuestionReview, Question, TelegramUser
 from .types_ import Specialty
 
 
@@ -20,9 +12,7 @@ def get_tg_users(db: Session, skip: int = 0) -> List[TelegramUser]:
 
 
 def get_tg_user(db: Session, tg_user_id: int) -> TelegramUser:
-    return (
-        db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).first()
-    )
+    return db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).first()
 
 
 def is_tg_user_already_exist(db: Session, tg_user_id: int) -> bool:
@@ -112,8 +102,7 @@ def remove_questions(db: Session, specialty: str) -> None:
 
 def remove_problem_question_review(db: Session, user_id: int, question_id: int) -> None:
     db.query(ProblemQuestionReview).filter(
-        models.ProblemQuestionReview.tg_user_id == user_id
-        and models.ProblemQuestionReview.question_id == question_id
+        models.ProblemQuestionReview.tg_user_id == user_id and models.ProblemQuestionReview.question_id == question_id
     ).delete()
     db.commit()
 
@@ -188,11 +177,7 @@ def get_bot_review(db: Session, tg_user_id: int) -> BotReview:
 
 
 def get_problem_question_review(db: Session, tg_user_id: int) -> ProblemQuestionReview:
-    db_problem = (
-        db.query(ProblemQuestionReview)
-        .filter(models.ProblemQuestionReview.tg_user_id == tg_user_id)
-        .first()
-    )
+    db_problem = db.query(ProblemQuestionReview).filter(models.ProblemQuestionReview.tg_user_id == tg_user_id).first()
     return db_problem
 
 
