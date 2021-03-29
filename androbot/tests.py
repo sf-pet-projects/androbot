@@ -4,7 +4,12 @@ import pytest
 from dateutil import tz
 
 from androbot.actions import Actions, get_main_menu, start_new_test
-from androbot.errors import NoNewQuestionsException, UserExistsException, UserNotExistsException, WrongBotScoreFormat
+from androbot.errors import (
+    NoNewQuestionsException,
+    UserExistsException,
+    UserNotExistsException,
+    WrongBotScoreFormat,
+)
 from androbot.schemas import Answer, EventsLog, Question, TelegramUser
 from androbot.types_ import AnswerTypes, Events, Specialty
 from androbot.utils import Utils
@@ -324,5 +329,29 @@ def test_add_problem_question_review():
     )
     assert Actions().get_problem_question_review(user.tg_user_id).review == second_review
     Actions().remove_problem_question_review(user.tg_user_id, question.id)
+    Actions().remove_user(user)
+    Actions().remove_questions("test")
+
+
+def test_add_question_score():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username=Utils.get_random_text(10),
+        specialty="test",
+    )
+    question = Question(
+        question_type="test",
+        question_category=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
+        text_answer=Utils.get_random_text(10),
+    )
+    Actions().add_user(user)
+    Actions().add_question(question)
+    Actions().add_question_score(question.id, user.tg_user_id, False)
+    assert Actions().get_question_score(question.id, user.tg_user_id).is_correct is False
+    Actions().add_question_score(question.id, user.tg_user_id, True)
+    assert Actions().get_question_score(question.id, user.tg_user_id).is_correct is True
+    Actions().remove_question_score(user.tg_user_id, question.id)
     Actions().remove_user(user)
     Actions().remove_questions("test")

@@ -3,7 +3,16 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from . import models, schemas
-from .models import Answer, BotReview, CurrentSession, EventsLog, ProblemQuestionReview, Question, TelegramUser
+from .models import (
+    Answer,
+    BotReview,
+    CurrentSession,
+    EventsLog,
+    ProblemQuestionReview,
+    Question,
+    QuestionScore,
+    TelegramUser,
+)
 from .types_ import Specialty
 
 
@@ -110,6 +119,14 @@ def remove_problem_question_review(db: Session, user_id: int, question_id: int) 
     db.commit()
 
 
+def remove_question_score(db: Session, user_id: int, question_id: int) -> None:
+    db.query(QuestionScore).filter(
+        models.QuestionScore.tg_user_id == user_id
+        and models.QuestionScore.question_id == question_id
+    ).delete()
+    db.commit()
+
+
 def get_passed_questions(db: Session, tg_user_id: int) -> List[int]:
     return db.query(models.Answer.quest_id).filter(models.Answer.tg_user_id == tg_user_id).all()
 
@@ -172,6 +189,44 @@ def add_bot_score(db: Session, tg_user_id: int, bot_score: int) -> BotReview:
         db.refresh(bot_review)
         db.close()
         return bot_review
+
+
+def add_question_score(
+    db: Session, question_id: int, user_id: int, is_correct: bool
+) -> QuestionScore:
+    db_question_score = (
+        db.query(QuestionScore)
+        .filter(models.QuestionScore.tg_user_id == user_id and models.QuestionScore.question_id)
+        .first()
+    )
+    if db_question_score is not None:
+        db_question_score.is_correct = is_correct
+        db.add(db_question_score)
+        db.commit()
+        db.refresh(db_question_score)
+        db.close()
+        return db_question_score
+    else:
+        db_question_score = models.QuestionScore(
+            question_id=question_id, tg_user_id=user_id, is_correct=is_correct
+        )
+        db.add(db_question_score)
+        db.commit()
+        db.refresh(db_question_score)
+        db.close()
+        return db_question_score
+
+
+def get_question_score(db: Session, question_id: int, tg_user_id: int) -> QuestionScore:
+    db_question_score = (
+        db.query(QuestionScore)
+        .filter(
+            models.QuestionScore.tg_user_id == tg_user_id
+            and models.QuestionScore.question_id == question_id
+        )
+        .first()
+    )
+    return db_question_score
 
 
 def get_bot_review(db: Session, tg_user_id: int) -> BotReview:
