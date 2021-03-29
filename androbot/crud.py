@@ -21,9 +21,7 @@ def get_tg_users(db: Session, skip: int = 0) -> List[TelegramUser]:
 
 
 def get_tg_user(db: Session, tg_user_id: int) -> TelegramUser:
-    return (
-        db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).first()
-    )
+    return db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).first()
 
 
 def is_tg_user_already_exist(db: Session, tg_user_id: int) -> bool:
@@ -113,8 +111,7 @@ def remove_questions(db: Session, specialty: str) -> None:
 
 def remove_problem_question_review(db: Session, user_id: int, question_id: int) -> None:
     db.query(ProblemQuestionReview).filter(
-        models.ProblemQuestionReview.tg_user_id == user_id
-        and models.ProblemQuestionReview.question_id == question_id
+        models.ProblemQuestionReview.tg_user_id == user_id and models.ProblemQuestionReview.question_id == question_id
     ).delete()
     db.commit()
 
@@ -234,38 +231,19 @@ def get_bot_review(db: Session, tg_user_id: int) -> BotReview:
     return db_review
 
 
-def get_problem_question_review(db: Session, tg_user_id: int) -> ProblemQuestionReview:
-    db_problem = (
-        db.query(ProblemQuestionReview)
-        .filter(models.ProblemQuestionReview.tg_user_id == tg_user_id)
-        .first()
-    )
-    return db_problem
+def get_problem_question_review(db: Session, tg_user_id: int) -> List[ProblemQuestionReview]:
+    db_problems = db.query(ProblemQuestionReview).filter(models.ProblemQuestionReview.tg_user_id == tg_user_id)
+    return db_problems
 
 
 def add_problem_question_review(
     db: Session, question_id: int, user_id: int, review: str, review_type: str
 ) -> ProblemQuestionReview:
-    db_problem = (
-        db.query(ProblemQuestionReview)
-        .filter(
-            models.ProblemQuestionReview.question_id == question_id
-            and models.ProblemQuestionReview.tg_user_id == user_id
-        )
-        .first()
+    db_problem = models.ProblemQuestionReview(
+        question_id=question_id, tg_user_id=user_id, review=review, review_type=review_type
     )
-    if db_problem is not None:
-        db_problem.review = review
-        db_problem.review_type = review_type
-        db.add(db_problem)
-        db.commit()
-        db.refresh(db_problem)
-    else:
-        db_problem = models.ProblemQuestionReview(
-            question_id=question_id, tg_user_id=user_id, review=review, review_type=review_type
-        )
-        db.add(db_problem)
-        db.commit()
-        db.refresh(db_problem)
+    db.add(db_problem)
+    db.commit()
+    db.refresh(db_problem)
     db.close()
     return db_problem

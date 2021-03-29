@@ -70,9 +70,7 @@ class Actions:
 
     def add_answer(self, answer: schemas.Answer) -> Optional[Answer]:
         has_text_answer = answer.text_answer is not None and answer.text_answer.strip()
-        has_voice_answer = (
-            answer.link_to_audio_answer is not None and answer.link_to_audio_answer.strip()
-        )
+        has_voice_answer = answer.link_to_audio_answer is not None and answer.link_to_audio_answer.strip()
         if has_text_answer or has_voice_answer:
             db_answer = crud.add_answer(self.db, answer)
             logger.info("Add new user's answer {}", db_answer)
@@ -146,9 +144,7 @@ class Actions:
 
     def add_bot_score(self, user: schemas.TelegramUser, bot_score: int) -> BotReview:
         if bot_score not in range(1, 10):
-            raise WrongBotScoreFormat(
-                "You can have only 1 to 10 score in field BotReview.bot_score"
-            )
+            raise WrongBotScoreFormat("You can have only 1 to 10 score in field BotReview.bot_score")
         return crud.add_bot_score(self.db, user.tg_user_id, bot_score)
 
     def get_bot_review(self, user: schemas.TelegramUser) -> BotReview:
@@ -157,11 +153,9 @@ class Actions:
     def add_problem_question_review(
         self, question_id: int, tg_user_id: int, review: str, review_type: AnswerTypes
     ) -> ProblemQuestionReview:
-        return crud.add_problem_question_review(
-            self.db, question_id, tg_user_id, review, review_type.name
-        )
+        return crud.add_problem_question_review(self.db, question_id, tg_user_id, review, review_type.name)
 
-    def get_problem_question_review(self, tg_user_id: int) -> ProblemQuestionReview:
+    def get_problem_question_review(self, tg_user_id: int) -> List[ProblemQuestionReview]:
         return crud.get_problem_question_review(self.db, tg_user_id)
 
     def add_question_score(

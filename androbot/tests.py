@@ -4,12 +4,7 @@ import pytest
 from dateutil import tz
 
 from androbot.actions import Actions, get_main_menu, start_new_test
-from androbot.errors import (
-    NoNewQuestionsException,
-    UserExistsException,
-    UserNotExistsException,
-    WrongBotScoreFormat,
-)
+from androbot.errors import NoNewQuestionsException, UserExistsException, UserNotExistsException, WrongBotScoreFormat
 from androbot.schemas import Answer, EventsLog, Question, TelegramUser
 from androbot.types_ import AnswerTypes, Events, Specialty
 from androbot.utils import Utils
@@ -33,9 +28,10 @@ def test_add_user():
         username=Utils.get_random_text(10),
         specialty=Specialty.ANDROID.value,
     )
-    db_user = Actions().add_user(user)
-    assert db_user.tg_user_id == user.tg_user_id
-    Actions().remove_user(db_user)
+    with Actions() as act:
+        db_user = act.add_user(user)
+        assert db_user.tg_user_id == user.tg_user_id
+        act.remove_user(db_user)
 
 
 def test_add_user_with_symbols_in_username():
@@ -45,9 +41,10 @@ def test_add_user_with_symbols_in_username():
         username="\"AL'🖐",
         specialty=Specialty.ANDROID.value,
     )
-    db_user = Actions().add_user(user)
-    assert db_user.tg_user_id == user.tg_user_id
-    Actions().remove_user(db_user)
+    with Actions() as act:
+        db_user = act.add_user(user)
+        assert db_user.tg_user_id == user.tg_user_id
+        act.remove_user(db_user)
 
 
 def test_add_already_exist_user():
@@ -57,10 +54,11 @@ def test_add_already_exist_user():
         username=Utils.get_random_text(10),
         specialty=Specialty.ANDROID.value,
     )
-    Actions().add_user(user)
-    with pytest.raises(UserExistsException):
-        Actions().add_user(user)
-    Actions().remove_user(user)
+    with Actions() as act:
+        act.add_user(user)
+        with pytest.raises(UserExistsException):
+            act.add_user(user)
+        act.remove_user(user)
 
 
 def test_remove_not_exist_user():
@@ -99,38 +97,39 @@ def test_get_next_test():
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
-    Actions().add_user(user)
-    Actions().add_question(question1)
-    Actions().add_question(question2)
-    Actions().add_question(question3)
-    answer1 = Answer(
-        quest_id=question1.id,
-        tg_user_id=user.tg_user_id,
-        answer_type=start_new_test()[1],
-        text_answer=Utils.get_random_text(50),
-        link_to_audio_answer=Utils.get_random_text(50),
-    )
-    answer2 = Answer(
-        quest_id=question2.id,
-        tg_user_id=user.tg_user_id,
-        answer_type=start_new_test()[1],
-        text_answer=Utils.get_random_text(50),
-        link_to_audio_answer=Utils.get_random_text(50),
-    )
-    answer3 = Answer(
-        quest_id=question1.id,
-        tg_user_id=user.tg_user_id,
-        answer_type=start_new_test()[1],
-        text_answer=Utils.get_random_text(50),
-        link_to_audio_answer=Utils.get_random_text(50),
-    )
-    Actions().add_answer(answer1)
-    Actions().add_answer(answer2)
-    Actions().add_answer(answer3)
-    question = Actions().get_next_test(user.tg_user_id)
-    assert question.id == question3.id
-    Actions().remove_user(user)
-    Actions().remove_questions("test")
+    with Actions() as act:
+        act.add_user(user)
+        act.add_question(question1)
+        act.add_question(question2)
+        act.add_question(question3)
+        answer1 = Answer(
+            quest_id=question1.id,
+            tg_user_id=user.tg_user_id,
+            answer_type=start_new_test()[1],
+            text_answer=Utils.get_random_text(50),
+            link_to_audio_answer=Utils.get_random_text(50),
+        )
+        answer2 = Answer(
+            quest_id=question2.id,
+            tg_user_id=user.tg_user_id,
+            answer_type=start_new_test()[1],
+            text_answer=Utils.get_random_text(50),
+            link_to_audio_answer=Utils.get_random_text(50),
+        )
+        answer3 = Answer(
+            quest_id=question1.id,
+            tg_user_id=user.tg_user_id,
+            answer_type=start_new_test()[1],
+            text_answer=Utils.get_random_text(50),
+            link_to_audio_answer=Utils.get_random_text(50),
+        )
+        act.add_answer(answer1)
+        act.add_answer(answer2)
+        act.add_answer(answer3)
+        question = act.get_next_test(user.tg_user_id)
+        assert question.id == question3.id
+        act.remove_user(user)
+        act.remove_questions("test")
 
 
 def test_get_current_question():
@@ -146,13 +145,14 @@ def test_get_current_question():
         text_question=Utils.get_random_text(10),
         additional_info=Utils.get_random_text(10),
     )
-    Actions().add_user(user)
-    Actions().add_question(question)
-    question = Actions().get_next_test(user.tg_user_id)
-    right_answer = Actions().get_current_question(user.tg_user_id).text_answer
-    assert right_answer == question.text_answer
-    Actions().remove_user(user)
-    Actions().remove_questions("test")
+    with Actions() as act:
+        act.add_user(user)
+        act.add_question(question)
+        question = act.get_next_test(user.tg_user_id)
+        right_answer = act.get_current_question(user.tg_user_id).text_answer
+        assert right_answer == question.text_answer
+        act.remove_user(user)
+        act.remove_questions("test")
 
 
 def test_add_event():
@@ -162,19 +162,20 @@ def test_add_event():
         username=Utils.get_random_text(10),
         specialty="test",
     )
-    Actions().add_user(user)
-    MSC = tz.gettz("Europe/Moscow")
-    event = EventsLog(
-        tg_user_id=user.tg_user_id,
-        event_type=Events.SendSolution,
-        datetime=datetime.datetime.now(tz=MSC),
-        param1=Specialty.ANDROID.value,
-        param2=Utils.get_random_number(5),
-        param3=Utils.get_random_number(5),
-        param4=AnswerTypes.VOICE.value,
-    )
-    Actions().add_event(event)
-    Actions().remove_user(user)
+    with Actions() as act:
+        act.add_user(user)
+        MSC = tz.gettz("Europe/Moscow")
+        event = EventsLog(
+            tg_user_id=user.tg_user_id,
+            event_type=Events.SendSolution,
+            datetime=datetime.datetime.now(tz=MSC),
+            param1=Specialty.ANDROID.value,
+            param2=Utils.get_random_number(5),
+            param3=Utils.get_random_number(5),
+            param4=AnswerTypes.VOICE.value,
+        )
+        act.add_event(event)
+        act.remove_user(user)
 
 
 def test_no_add_answer_with_empty_text():
@@ -207,24 +208,24 @@ def test_no_add_answer_with_empty_text():
         act.add_question(question1)
         act.add_question(question2)
         act.add_question(question3)
-    answer1 = Answer(
-        quest_id=question1.id,
-        tg_user_id=user.tg_user_id,
-        answer_type=start_new_test()[1],
-        text_answer="   ",
-        link_to_audio_answer=Utils.get_random_text(50),
-    )
-    answer2 = Answer(
-        quest_id=question2.id,
-        tg_user_id=user.tg_user_id,
-        answer_type=start_new_test()[1],
-        text_answer="   ",
-        link_to_audio_answer="",
-    )
-    assert Actions().add_answer(answer1) is not None
-    assert Actions().add_answer(answer2) is None
-    Actions().remove_user(user)
-    Actions().remove_questions("test")
+        answer1 = Answer(
+            quest_id=question1.id,
+            tg_user_id=user.tg_user_id,
+            answer_type=start_new_test()[1],
+            text_answer="   ",
+            link_to_audio_answer=Utils.get_random_text(50),
+        )
+        answer2 = Answer(
+            quest_id=question2.id,
+            tg_user_id=user.tg_user_id,
+            answer_type=start_new_test()[1],
+            text_answer="   ",
+            link_to_audio_answer="",
+        )
+        assert act.add_answer(answer1) is not None
+        assert act.add_answer(answer2) is None
+        act.remove_user(user)
+        act.remove_questions("test")
 
 
 def test_has_started_test():
@@ -240,23 +241,24 @@ def test_has_started_test():
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
-    Actions().add_user(user)
-    assert Actions().has_started_test(user.tg_user_id) is False
-    Actions().add_question(question)
-    Actions().get_next_test(user.tg_user_id)
-    assert Actions().has_started_test(user.tg_user_id) is True
-    answer = Answer(
-        quest_id=question.id,
-        tg_user_id=user.tg_user_id,
-        answer_type=start_new_test()[1],
-        text_answer="   ",
-        link_to_audio_answer=Utils.get_random_text(50),
-    )
-    Actions().add_answer(answer)
-    with pytest.raises(NoNewQuestionsException):
-        Actions().get_next_test(user.tg_user_id)
-    Actions().remove_user(user)
-    Actions().remove_questions("test")
+    with Actions() as act:
+        act.add_user(user)
+        assert act.has_started_test(user.tg_user_id) is False
+        act.add_question(question)
+        act.get_next_test(user.tg_user_id)
+        assert act.has_started_test(user.tg_user_id) is True
+        answer = Answer(
+            quest_id=question.id,
+            tg_user_id=user.tg_user_id,
+            answer_type=start_new_test()[1],
+            text_answer="   ",
+            link_to_audio_answer=Utils.get_random_text(50),
+        )
+        act.add_answer(answer)
+        with pytest.raises(NoNewQuestionsException):
+            act.get_next_test(user.tg_user_id)
+        act.remove_user(user)
+        act.remove_questions("test")
 
 
 def test_start_test_after_reset_session():
@@ -272,21 +274,22 @@ def test_start_test_after_reset_session():
         text_question=Utils.get_random_text(10),
         text_answer=Utils.get_random_text(10),
     )
-    Actions().add_user(user)
-    assert Actions().has_started_test(user.tg_user_id) is False
-    Actions().add_question(question)
-    answer = Answer(
-        quest_id=question.id,
-        tg_user_id=user.tg_user_id,
-        answer_type=start_new_test()[1],
-        text_answer=Utils.get_random_text(50),
-        link_to_audio_answer=Utils.get_random_text(50),
-    )
-    Actions().add_answer(answer)
-    Actions().reset_session(user)
-    assert Actions().get_next_test(user.tg_user_id).text_question == question.text_question
-    Actions().remove_user(user)
-    Actions().remove_questions("test")
+    with Actions() as act:
+        act.add_user(user)
+        assert act.has_started_test(user.tg_user_id) is False
+        act.add_question(question)
+        answer = Answer(
+            quest_id=question.id,
+            tg_user_id=user.tg_user_id,
+            answer_type=start_new_test()[1],
+            text_answer=Utils.get_random_text(50),
+            link_to_audio_answer=Utils.get_random_text(50),
+        )
+        act.add_answer(answer)
+        act.reset_session(user)
+        assert act.get_next_test(user.tg_user_id).text_question == question.text_question
+        act.remove_user(user)
+        act.remove_questions("test")
 
 
 def test_add_bot_score():
@@ -296,13 +299,14 @@ def test_add_bot_score():
         username=Utils.get_random_text(10),
         specialty="test",
     )
-    Actions().add_user(user)
-    Actions().add_bot_score(user, 5)
-    assert Actions().get_bot_review(user).bot_score == 5
-    Actions().add_bot_score(user, 3)
-    assert Actions().get_bot_review(user).bot_score == 3
-    with pytest.raises(WrongBotScoreFormat):
-        Actions().add_bot_score(user, 15)
+    with Actions() as act:
+        act.add_user(user)
+        act.add_bot_score(user, 5)
+        assert act.get_bot_review(user).bot_score == 5
+        act.add_bot_score(user, 3)
+        assert act.get_bot_review(user).bot_score == 3
+        with pytest.raises(WrongBotScoreFormat):
+            act.add_bot_score(user, 15)
 
 
 def test_add_problem_question_review():
@@ -320,17 +324,16 @@ def test_add_problem_question_review():
     )
     review = "Описание проблемы"
     second_review = "Второе описание проблемы"
-    Actions().add_user(user)
-    Actions().add_question(question)
-    Actions().add_problem_question_review(question.id, user.tg_user_id, review, AnswerTypes.TEXT)
-    assert Actions().get_problem_question_review(user.tg_user_id).review == review
-    Actions().add_problem_question_review(
-        question.id, user.tg_user_id, second_review, AnswerTypes.VOICE
-    )
-    assert Actions().get_problem_question_review(user.tg_user_id).review == second_review
-    Actions().remove_problem_question_review(user.tg_user_id, question.id)
-    Actions().remove_user(user)
-    Actions().remove_questions("test")
+    with Actions() as act:
+        act.add_user(user)
+        act.add_question(question)
+        act.add_problem_question_review(question.id, user.tg_user_id, review, AnswerTypes.TEXT)
+        assert act.get_problem_question_review(user.tg_user_id)[0].review == review
+        act.add_problem_question_review(question.id, user.tg_user_id, second_review, AnswerTypes.VOICE)
+        assert act.get_problem_question_review(user.tg_user_id)[1].review == second_review
+        act.remove_problem_question_review(user.tg_user_id, question.id)
+        act.remove_user(user)
+        act.remove_questions("test")
 
 
 def test_add_question_score():
