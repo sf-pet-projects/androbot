@@ -329,9 +329,9 @@ def test_add_problem_question_review():
         act.add_user(user)
         act.add_question(question)
         act.add_problem_question_review(question.id, user.tg_user_id, review, AnswerTypes.TEXT)
-        assert act.get_problem_question_review(user.tg_user_id).review == review
+        assert act.get_problem_question_review(user.tg_user_id)[0].review == review
         act.add_problem_question_review(question.id, user.tg_user_id, second_review, AnswerTypes.VOICE)
-        assert act.get_problem_question_review(user.tg_user_id).review == second_review
+        assert act.get_problem_question_review(user.tg_user_id)[1].review == second_review
         act.remove_problem_question_review(user.tg_user_id, question.id)
         act.remove_user(user)
         act.remove_questions("test")

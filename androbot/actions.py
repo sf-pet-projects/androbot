@@ -147,5 +147,5 @@ class Actions:
     ) -> ProblemQuestionReview:
         return crud.add_problem_question_review(self.db, question_id, tg_user_id, review, review_type.name)
 
-    def get_problem_question_review(self, tg_user_id: int) -> ProblemQuestionReview:
+    def get_problem_question_review(self, tg_user_id: int) -> List[ProblemQuestionReview]:
         return crud.get_problem_question_review(self.db, tg_user_id)

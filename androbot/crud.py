@@ -176,34 +176,19 @@ def get_bot_review(db: Session, tg_user_id: int) -> BotReview:
     return db_review
 
 
-def get_problem_question_review(db: Session, tg_user_id: int) -> ProblemQuestionReview:
-    db_problem = db.query(ProblemQuestionReview).filter(models.ProblemQuestionReview.tg_user_id == tg_user_id).first()
-    return db_problem
+def get_problem_question_review(db: Session, tg_user_id: int) -> List[ProblemQuestionReview]:
+    db_problems = db.query(ProblemQuestionReview).filter(models.ProblemQuestionReview.tg_user_id == tg_user_id)
+    return db_problems
 
 
 def add_problem_question_review(
     db: Session, question_id: int, user_id: int, review: str, review_type: str
 ) -> ProblemQuestionReview:
-    db_problem = (
-        db.query(ProblemQuestionReview)
-        .filter(
-            models.ProblemQuestionReview.question_id == question_id
-            and models.ProblemQuestionReview.tg_user_id == user_id
-        )
-        .first()
+    db_problem = models.ProblemQuestionReview(
+        question_id=question_id, tg_user_id=user_id, review=review, review_type=review_type
     )
-    if db_problem is not None:
-        db_problem.review = review
-        db_problem.review_type = review_type
-        db.add(db_problem)
-        db.commit()
-        db.refresh(db_problem)
-    else:
-        db_problem = models.ProblemQuestionReview(
-            question_id=question_id, tg_user_id=user_id, review=review, review_type=review_type
-        )
-        db.add(db_problem)
-        db.commit()
-        db.refresh(db_problem)
+    db.add(db_problem)
+    db.commit()
+    db.refresh(db_problem)
     db.close()
     return db_problem
