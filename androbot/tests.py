@@ -296,7 +296,8 @@ def test_add_bot_score():
         username=Utils.get_random_text(10),
         specialty="test",
     )
-    Actions().add_user(user)
+    with Actions() as act:
+        act.add_user(user)
     Actions().add_bot_score(user, 5)
     assert Actions().get_bot_review(user).bot_score == 5
     Actions().add_bot_score(user, 3)
