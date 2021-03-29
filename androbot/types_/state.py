@@ -13,4 +13,5 @@ class DialogueStates(StatesGroup):
     ASK_QUESTION = State()
     GOT_ANSWER = State()
     DO_NOT_UNDERSTAND = State()
+    DO_YOU_WANT_GET_ANSWER = State()
     NO_NEW_QUESTIONS = State()
