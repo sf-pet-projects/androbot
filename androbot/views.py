@@ -153,7 +153,7 @@ def get_do_you_want_to_get_correct_answer() -> View:
 
     row_buttons = [
         aiotypes.KeyboardButton("💡 Эталонный ответ"),
-        aiotypes.KeyboardButton("➡️Следующий вопрос"),
+        aiotypes.KeyboardButton("➡️ Следующий вопрос"),
     ]
 
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
