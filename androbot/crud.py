@@ -3,7 +3,15 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from . import models, schemas
-from .models import Answer, BotReview, CurrentSession, EventsLog, ProblemQuestionReview, Question, TelegramUser
+from .models import (
+    Answer,
+    BotReview,
+    CurrentSession,
+    EventsLog,
+    ProblemQuestionReview,
+    Question,
+    TelegramUser,
+)
 from .types_ import Specialty
 
 

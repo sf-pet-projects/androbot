@@ -7,7 +7,12 @@ from loguru import logger
 from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
-from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException, WrongBotScoreFormat
+from .errors import (
+    NoNewQuestionsException,
+    UserExistsException,
+    UserNotExistsException,
+    WrongBotScoreFormat,
+)
 from .models import Answer, BotReview, ProblemQuestionReview, Question, TelegramUser
 from .types_ import AnswerTypes, Specialty
 

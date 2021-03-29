@@ -4,7 +4,12 @@ import pytest
 from dateutil import tz
 
 from androbot.actions import Actions, get_main_menu, start_new_test
-from androbot.errors import NoNewQuestionsException, UserExistsException, UserNotExistsException, WrongBotScoreFormat
+from androbot.errors import (
+    NoNewQuestionsException,
+    UserExistsException,
+    UserNotExistsException,
+    WrongBotScoreFormat,
+)
 from androbot.schemas import Answer, EventsLog, Question, TelegramUser
 from androbot.types_ import AnswerTypes, Events, Specialty
 from androbot.utils import Utils
