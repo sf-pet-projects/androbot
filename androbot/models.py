@@ -68,3 +68,13 @@ class BotReview(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
     tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
     bot_score = Column(Integer, unique=False, index=True)
+
+
+class ProblemQuestionReview(Base):
+    __tablename__ = "problem_question_review"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
+    question_id = Column(Integer, ForeignKey("question.id"))
+    tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
+    review = Column(String, unique=False, index=True)
+    review_type = Column(String, unique=False, index=True)

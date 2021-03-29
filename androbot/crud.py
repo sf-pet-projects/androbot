@@ -3,7 +3,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from . import models, schemas
-from .models import Answer, BotReview, CurrentSession, EventsLog, Question, TelegramUser
+from .models import Answer, BotReview, CurrentSession, EventsLog, ProblemQuestionReview, Question, TelegramUser
 from .types_ import Specialty
 
 
@@ -102,6 +102,14 @@ def remove_questions(db: Session, specialty: str) -> None:
     db.commit()
 
 
+def remove_problem_question_review(db: Session, user_id: int, question_id: int) -> None:
+    db.query(ProblemQuestionReview).filter(
+        models.ProblemQuestionReview.tg_user_id == user_id
+        and models.ProblemQuestionReview.question_id == question_id
+    ).delete()
+    db.commit()
+
+
 def get_passed_questions(db: Session, tg_user_id: int) -> List[int]:
     return db.query(models.Answer.quest_id).filter(models.Answer.tg_user_id == tg_user_id).all()
 
@@ -169,3 +177,40 @@ def add_bot_score(db: Session, tg_user_id: int, bot_score: int) -> BotReview:
 def get_bot_review(db: Session, tg_user_id: int) -> BotReview:
     db_review = db.query(BotReview).filter(models.BotReview.tg_user_id == tg_user_id).first()
     return db_review
+
+
+def get_problem_question_review(db: Session, tg_user_id: int) -> ProblemQuestionReview:
+    db_problem = (
+        db.query(ProblemQuestionReview)
+        .filter(models.ProblemQuestionReview.tg_user_id == tg_user_id)
+        .first()
+    )
+    return db_problem
+
+
+def add_problem_question_review(
+    db: Session, question_id: int, user_id: int, review: str, review_type: str
+) -> ProblemQuestionReview:
+    db_problem = (
+        db.query(ProblemQuestionReview)
+        .filter(
+            models.ProblemQuestionReview.question_id == question_id
+            and models.ProblemQuestionReview.tg_user_id == user_id
+        )
+        .first()
+    )
+    if db_problem is not None:
+        db_problem.review = review
+        db_problem.review_type = review_type
+        db.add(db_problem)
+        db.commit()
+        db.refresh(db_problem)
+    else:
+        db_problem = models.ProblemQuestionReview(
+            question_id=question_id, tg_user_id=user_id, review=review, review_type=review_type
+        )
+        db.add(db_problem)
+        db.commit()
+        db.refresh(db_problem)
+    db.close()
+    return db_problem

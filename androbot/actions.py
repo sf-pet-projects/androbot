@@ -7,13 +7,8 @@ from loguru import logger
 from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
-from .errors import (
-    NoNewQuestionsException,
-    UserExistsException,
-    UserNotExistsException,
-    WrongBotScoreFormat,
-)
-from .models import Answer, BotReview, Question, TelegramUser
+from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException, WrongBotScoreFormat
+from .models import Answer, BotReview, ProblemQuestionReview, Question, TelegramUser
 from .types_ import AnswerTypes, Specialty
 
 
@@ -82,6 +77,9 @@ class Actions:
     def remove_questions(self, specialty: str) -> None:
         crud.remove_questions(self.db, specialty)
 
+    def remove_problem_question_review(self, tg_user_id: int, question_id: int) -> None:
+        crud.remove_problem_question_review(self.db, tg_user_id, question_id)
+
     def get_next_test(self, tg_user_id: int) -> Question:
         tg_user = crud.get_tg_user(self.db, tg_user_id)
         passed_questions = crud.get_passed_questions(self.db, tg_user_id)
@@ -147,3 +145,13 @@ class Actions:
 
     def get_bot_review(self, user: schemas.TelegramUser) -> BotReview:
         return crud.get_bot_review(self.db, user.tg_user_id)
+
+    def add_problem_question_review(
+        self, question_id: int, tg_user_id: int, review: str, review_type: AnswerTypes
+    ) -> ProblemQuestionReview:
+        return crud.add_problem_question_review(
+            self.db, question_id, tg_user_id, review, review_type.name
+        )
+
+    def get_problem_question_review(self, tg_user_id: int) -> ProblemQuestionReview:
+        return crud.get_problem_question_review(self.db, tg_user_id)

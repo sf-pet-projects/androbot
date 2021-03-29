@@ -4,12 +4,7 @@ import pytest
 from dateutil import tz
 
 from androbot.actions import Actions, get_main_menu, start_new_test
-from androbot.errors import (
-    NoNewQuestionsException,
-    UserExistsException,
-    UserNotExistsException,
-    WrongBotScoreFormat,
-)
+from androbot.errors import NoNewQuestionsException, UserExistsException, UserNotExistsException, WrongBotScoreFormat
 from androbot.schemas import Answer, EventsLog, Question, TelegramUser
 from androbot.types_ import AnswerTypes, Events, Specialty
 from androbot.utils import Utils
@@ -303,3 +298,31 @@ def test_add_bot_score():
     assert Actions().get_bot_review(user).bot_score == 3
     with pytest.raises(WrongBotScoreFormat):
         Actions().add_bot_score(user, 15)
+
+
+def test_add_problem_question_review():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username=Utils.get_random_text(10),
+        specialty="test",
+    )
+    question = Question(
+        question_type="test",
+        question_category=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
+        text_answer=Utils.get_random_text(10),
+    )
+    review = "Описание проблемы"
+    second_review = "Второе описание проблемы"
+    Actions().add_user(user)
+    Actions().add_question(question)
+    Actions().add_problem_question_review(question.id, user.tg_user_id, review, AnswerTypes.TEXT)
+    assert Actions().get_problem_question_review(user.tg_user_id).review == review
+    Actions().add_problem_question_review(
+        question.id, user.tg_user_id, second_review, AnswerTypes.VOICE
+    )
+    assert Actions().get_problem_question_review(user.tg_user_id).review == second_review
+    Actions().remove_problem_question_review(user.tg_user_id, question.id)
+    Actions().remove_user(user)
+    Actions().remove_questions("test")
