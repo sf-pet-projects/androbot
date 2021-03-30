@@ -25,3 +25,7 @@ class TemplateNotFound(BaseAppError):
 
 class TooManyParamsForLoggingActions(BaseAppError):
     pass
+
+
+class WrongBotScoreFormat(BaseAppError):
+    pass

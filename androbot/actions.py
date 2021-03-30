@@ -7,8 +7,8 @@ from loguru import logger
 from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
-from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException
-from .models import Answer, Question, TelegramUser
+from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException, WrongBotScoreFormat
+from .models import Answer, BotReview, ProblemQuestionReview, Question, QuestionScore, TelegramUser
 from .types_ import AnswerTypes, Specialty
 
 
@@ -65,9 +65,7 @@ class Actions:
 
     def add_answer(self, answer: schemas.Answer) -> Optional[Answer]:
         has_text_answer = answer.text_answer is not None and answer.text_answer.strip()
-        has_voice_answer = (
-            answer.link_to_audio_answer is not None and answer.link_to_audio_answer.strip()
-        )
+        has_voice_answer = answer.link_to_audio_answer is not None and answer.link_to_audio_answer.strip()
         if has_text_answer or has_voice_answer:
             db_answer = crud.add_answer(self.db, answer)
             logger.info("Add new user's answer {}", db_answer)
@@ -76,6 +74,12 @@ class Actions:
 
     def remove_questions(self, specialty: str) -> None:
         crud.remove_questions(self.db, specialty)
+
+    def remove_problem_question_review(self, tg_user_id: int, question_id: int) -> None:
+        crud.remove_problem_question_review(self.db, tg_user_id, question_id)
+
+    def remove_question_score(self, tg_user_id: int, question_id: int) -> None:
+        crud.remove_question_score(self.db, tg_user_id, question_id)
 
     def get_next_test(self, tg_user_id: int) -> Question:
         tg_user = crud.get_tg_user(self.db, tg_user_id)
@@ -132,3 +136,25 @@ class Actions:
     def reset_session(self, user: schemas.TelegramUser) -> None:
         crud.remove_answers(self.db, user.tg_user_id)
         crud.remove_sessions(self.db, user.tg_user_id)
+
+    def add_bot_score(self, user: schemas.TelegramUser, bot_score: int) -> BotReview:
+        if bot_score not in range(1, 10):
+            raise WrongBotScoreFormat("You can have only 1 to 10 score in field BotReview.bot_score")
+        return crud.add_bot_score(self.db, user.tg_user_id, bot_score)
+
+    def get_bot_review(self, user: schemas.TelegramUser) -> BotReview:
+        return crud.get_bot_review(self.db, user.tg_user_id)
+
+    def add_problem_question_review(
+        self, question_id: int, tg_user_id: int, review: str, review_type: AnswerTypes
+    ) -> ProblemQuestionReview:
+        return crud.add_problem_question_review(self.db, question_id, tg_user_id, review, review_type.name)
+
+    def get_problem_question_review(self, tg_user_id: int) -> List[ProblemQuestionReview]:
+        return crud.get_problem_question_review(self.db, tg_user_id)
+
+    def add_question_score(self, question_id: int, tg_user_id: int, is_correct: bool) -> QuestionScore:
+        return crud.add_question_score(self.db, question_id, tg_user_id, is_correct)
+
+    def get_question_score(self, question_id: int, tg_user_id: int) -> List[QuestionScore]:
+        return crud.get_question_score(self.db, question_id, tg_user_id)

@@ -14,9 +14,7 @@ async def send_start_screen(message: aiotypes.Message):
     """
     Обработчик для команды start.
     """
-    full_user_name = " ".join(
-        (name for name in [message.from_user.first_name, message.from_user.last_name] if name)
-    )
+    full_user_name = " ".join((name for name in [message.from_user.first_name, message.from_user.last_name] if name))
     tg_user = schemas.TelegramUser(
         tg_user_id=message.from_user.id, name=full_user_name, username=message.from_user.username
     )

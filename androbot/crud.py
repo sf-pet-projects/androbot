@@ -3,7 +3,16 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from . import models, schemas
-from .models import Answer, CurrentSession, EventsLog, Question, TelegramUser
+from .models import (
+    Answer,
+    BotReview,
+    CurrentSession,
+    EventsLog,
+    ProblemQuestionReview,
+    Question,
+    QuestionScore,
+    TelegramUser,
+)
 from .types_ import Specialty
 
 
@@ -12,9 +21,7 @@ def get_tg_users(db: Session, skip: int = 0) -> List[TelegramUser]:
 
 
 def get_tg_user(db: Session, tg_user_id: int) -> TelegramUser:
-    return (
-        db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).first()
-    )
+    return db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id).first()
 
 
 def is_tg_user_already_exist(db: Session, tg_user_id: int) -> bool:
@@ -102,13 +109,27 @@ def remove_questions(db: Session, specialty: str) -> None:
     db.commit()
 
 
+def remove_problem_question_review(db: Session, user_id: int, question_id: int) -> None:
+    db.query(ProblemQuestionReview).filter(
+        models.ProblemQuestionReview.tg_user_id == user_id and models.ProblemQuestionReview.question_id == question_id
+    ).delete()
+    db.commit()
+
+
+def remove_question_score(db: Session, user_id: int, question_id: int) -> None:
+    db.query(QuestionScore).filter(
+        models.QuestionScore.tg_user_id == user_id and models.QuestionScore.question_id == question_id
+    ).delete()
+    db.commit()
+
+
 def get_passed_questions(db: Session, tg_user_id: int) -> List[int]:
     return db.query(models.Answer.quest_id).filter(models.Answer.tg_user_id == tg_user_id).all()
 
 
 def set_current_question(db: Session, tg_user_id: int, quest_id: int) -> Session:
     query = db.query(models.CurrentSession).filter(models.CurrentSession.tg_user_id == tg_user_id)
-    if query.count() == 1:
+    if query is not None and query.count() == 1:
         db_session = query.first()
         db_session.quest_id = quest_id
     else:
@@ -124,7 +145,7 @@ def set_current_question(db: Session, tg_user_id: int, quest_id: int) -> Session
 
 def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty) -> None:
     query = db.query(models.TelegramUser).filter(models.TelegramUser.tg_user_id == tg_user_id)
-    if query.count() == 1:
+    if query is not None and query.count() == 1:
         db_session = query.first()
         db_session.specialty = specialty.value
         db.commit()
@@ -146,3 +167,60 @@ def get_all_questions(db: Session, specialty: str) -> List[Question]:
 
 def get_question(db: Session, quest_id: int) -> Question:
     return db.query(Question).filter(models.Question.id == quest_id).first()
+
+
+def add_bot_score(db: Session, tg_user_id: int, bot_score: int) -> BotReview:
+    db_review = db.query(BotReview).filter(models.BotReview.tg_user_id == tg_user_id).first()
+    if db_review is not None:
+        db_review.bot_score = bot_score
+        db.add(db_review)
+        db.commit()
+        db.refresh(db_review)
+        db.close()
+        return db_review
+    else:
+        bot_review = models.BotReview(tg_user_id=tg_user_id, bot_score=bot_score)
+        db.add(bot_review)
+        db.commit()
+        db.refresh(bot_review)
+        db.close()
+        return bot_review
+
+
+def add_question_score(db: Session, question_id: int, user_id: int, is_correct: bool) -> QuestionScore:
+    db_question_score = models.QuestionScore(question_id=question_id, tg_user_id=user_id, is_correct=is_correct)
+    db.add(db_question_score)
+    db.commit()
+    db.refresh(db_question_score)
+    db.close()
+    return db_question_score
+
+
+def get_question_score(db: Session, question_id: int, tg_user_id: int) -> List[QuestionScore]:
+    db_question_score = db.query(QuestionScore).filter(
+        models.QuestionScore.tg_user_id == tg_user_id and models.QuestionScore.question_id == question_id
+    )
+    return db_question_score
+
+
+def get_bot_review(db: Session, tg_user_id: int) -> BotReview:
+    db_review = db.query(BotReview).filter(models.BotReview.tg_user_id == tg_user_id).first()
+    return db_review
+
+
+def get_problem_question_review(db: Session, tg_user_id: int) -> List[ProblemQuestionReview]:
+    db_problems = db.query(ProblemQuestionReview).filter(models.ProblemQuestionReview.tg_user_id == tg_user_id)
+    return db_problems
+
+
+def add_problem_question_review(
+    db: Session, question_id: int, user_id: int, review: str, review_type: str
+) -> ProblemQuestionReview:
+    db_problem = models.ProblemQuestionReview(
+        question_id=question_id, tg_user_id=user_id, review=review, review_type=review_type
+    )
+    db.add(db_problem)
+    db.commit()
+    db.refresh(db_problem)
+    db.close()
+    return db_problem

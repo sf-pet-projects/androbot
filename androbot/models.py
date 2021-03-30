@@ -1,6 +1,6 @@
 import datetime as datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -60,3 +60,30 @@ class EventsLog(Base):
     param3 = Column(String, unique=False, index=True)
     param4 = Column(String, unique=False, index=True)
     param5 = Column(String, unique=False, index=True)
+
+
+class BotReview(Base):
+    __tablename__ = "bot_review"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
+    tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
+    bot_score = Column(Integer, unique=False, index=True)
+
+
+class QuestionScore(Base):
+    __tablename__ = "question_score"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
+    tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
+    question_id = Column(Integer, ForeignKey("question.id"))
+    is_correct = Column(Boolean, unique=False, index=True)
+
+
+class ProblemQuestionReview(Base):
+    __tablename__ = "problem_question_review"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
+    question_id = Column(Integer, ForeignKey("question.id"))
+    tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
+    review = Column(String, unique=False, index=True)
+    review_type = Column(String, unique=False, index=True)
