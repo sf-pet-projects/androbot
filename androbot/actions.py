@@ -8,7 +8,7 @@ from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
 from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException, WrongBotScoreFormat
-from .models import Answer, BotReview, ProblemQuestionReview, Question, TelegramUser
+from .models import Answer, BotReview, ProblemQuestionReview, Question, QuestionScore, TelegramUser
 from .types_ import AnswerTypes, Specialty
 
 
@@ -77,6 +77,9 @@ class Actions:
 
     def remove_problem_question_review(self, tg_user_id: int, question_id: int) -> None:
         crud.remove_problem_question_review(self.db, tg_user_id, question_id)
+
+    def remove_question_score(self, tg_user_id: int, question_id: int) -> None:
+        crud.remove_question_score(self.db, tg_user_id, question_id)
 
     def get_next_test(self, tg_user_id: int) -> Question:
         tg_user = crud.get_tg_user(self.db, tg_user_id)
@@ -149,3 +152,9 @@ class Actions:
 
     def get_problem_question_review(self, tg_user_id: int) -> List[ProblemQuestionReview]:
         return crud.get_problem_question_review(self.db, tg_user_id)
+
+    def add_question_score(self, question_id: int, tg_user_id: int, is_correct: bool) -> QuestionScore:
+        return crud.add_question_score(self.db, question_id, tg_user_id, is_correct)
+
+    def get_question_score(self, question_id: int, tg_user_id: int) -> List[QuestionScore]:
+        return crud.get_question_score(self.db, question_id, tg_user_id)
