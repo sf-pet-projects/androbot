@@ -208,21 +208,20 @@ def test_no_add_answer_with_empty_text():
         act.add_question(question1)
         act.add_question(question2)
         act.add_question(question3)
-    answer1 = Answer(
-        quest_id=question1.id,
-        tg_user_id=user.tg_user_id,
-        answer_type=start_new_test()[1],
-        text_answer="   ",
-        link_to_audio_answer=Utils.get_random_text(50),
-    )
-    answer2 = Answer(
-        quest_id=question2.id,
-        tg_user_id=user.tg_user_id,
-        answer_type=start_new_test()[1],
-        text_answer="   ",
-        link_to_audio_answer="",
-    )
-    with Actions() as act:
+        answer1 = Answer(
+            quest_id=question1.id,
+            tg_user_id=user.tg_user_id,
+            answer_type=start_new_test()[1],
+            text_answer="   ",
+            link_to_audio_answer=Utils.get_random_text(50),
+        )
+        answer2 = Answer(
+            quest_id=question2.id,
+            tg_user_id=user.tg_user_id,
+            answer_type=start_new_test()[1],
+            text_answer="   ",
+            link_to_audio_answer="",
+        )
         assert act.add_answer(answer1) is not None
         assert act.add_answer(answer2) is None
         act.remove_user(user)
@@ -308,3 +307,55 @@ def test_add_bot_score():
         assert act.get_bot_review(user).bot_score == 3
         with pytest.raises(WrongBotScoreFormat):
             act.add_bot_score(user, 15)
+
+
+def test_add_problem_question_review():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username=Utils.get_random_text(10),
+        specialty="test",
+    )
+    question = Question(
+        question_type="test",
+        question_category=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
+        text_answer=Utils.get_random_text(10),
+    )
+    review = "Описание проблемы"
+    second_review = "Второе описание проблемы"
+    with Actions() as act:
+        act.add_user(user)
+        act.add_question(question)
+        act.add_problem_question_review(question.id, user.tg_user_id, review, AnswerTypes.TEXT)
+        assert act.get_problem_question_review(user.tg_user_id)[0].review == review
+        act.add_problem_question_review(question.id, user.tg_user_id, second_review, AnswerTypes.VOICE)
+        assert act.get_problem_question_review(user.tg_user_id)[1].review == second_review
+        act.remove_problem_question_review(user.tg_user_id, question.id)
+        act.remove_user(user)
+        act.remove_questions("test")
+
+
+def test_add_question_score():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username=Utils.get_random_text(10),
+        specialty="test",
+    )
+    question = Question(
+        question_type="test",
+        question_category=Utils.get_random_text(10),
+        text_question=Utils.get_random_text(10),
+        text_answer=Utils.get_random_text(10),
+    )
+    with Actions() as act:
+        act.add_user(user)
+        act.add_question(question)
+        act.add_question_score(question.id, user.tg_user_id, False)
+        assert act.get_question_score(question.id, user.tg_user_id)[0].is_correct is False
+        act.add_question_score(question.id, user.tg_user_id, True)
+        assert act.get_question_score(question.id, user.tg_user_id)[1].is_correct is True
+        act.remove_question_score(user.tg_user_id, question.id)
+        act.remove_user(user)
+        act.remove_questions("test")
