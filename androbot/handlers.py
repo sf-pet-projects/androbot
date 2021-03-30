@@ -190,7 +190,10 @@ async def back_to_main_menu(message: aiotypes.Message):
 
 
 @dp.message_handler(regexp="Готов!", state=DialogueStates.ARE_YOU_READY_FOR_TEST)
-@dp.message_handler(regexp="Следующий вопрос", state=DialogueStates.GOT_ANSWER)
+@dp.message_handler(
+    regexp="Следующий вопрос",
+    state=[DialogueStates.GOT_ANSWER, DialogueStates.DO_YOU_WANT_GET_ANSWER],
+)
 async def get_another_question(message: aiotypes.Message, state: FSMContext):
     """
     Выдать пользователю задачу
@@ -217,10 +220,21 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
 
 
 @dp.message_handler(regexp="Не понял вопрос", state=DialogueStates.ASK_QUESTION)
-async def not_understand_question(message: aiotypes.Message):
+async def not_understand_question(message: aiotypes.Message, state: FSMContext):
     """
     Пользователю не понятен вопрос, спросим почему не понятен
     """
+    state_data = await state.get_data()
+
+    answer = schemas.Answer(
+        quest_id=state_data["question_id"],
+        tg_user_id=message.from_user.id,
+        answer_type=state_data["answer_type"],
+        text_answer=message.text,
+    )
+
+    with Actions() as act:
+        act.add_answer(answer)
 
     view = views.get_why_do_not_understand()
 
@@ -240,6 +254,7 @@ async def get_why_not_understand_question(message: aiotypes.Message, state: FSMC
     Получили описание, почему вопрос не понятен
     """
     state_data = await state.get_data()
+
     log_event(
         message.from_user.id,
         Events.Unclear,
@@ -248,7 +263,7 @@ async def get_why_not_understand_question(message: aiotypes.Message, state: FSMC
         message.text,
     )
 
-    view = views.get_thanks_for_question_feedback_view()
+    view = views.get_do_you_want_to_get_correct_answer()
 
     await bot.send_message(
         text=view.text,
@@ -257,14 +272,52 @@ async def get_why_not_understand_question(message: aiotypes.Message, state: FSMC
         reply_markup=view.markup,
     )
 
-    await DialogueStates.GOT_ANSWER.set()
+    await DialogueStates.DO_YOU_WANT_GET_ANSWER.set()
+
+
+@dp.message_handler(regexp="Не знаю ответ", state=DialogueStates.ASK_QUESTION)
+async def do_not_know_question(message: aiotypes.Message, state: FSMContext):
+    """
+    Не знает ответ на вопрос.
+    Хочет ли посмотреть эталонный ответ, или следующий вопрос зададим
+    """
+
+    state_data = await state.get_data()
+
+    answer = schemas.Answer(
+        quest_id=state_data["question_id"],
+        tg_user_id=message.from_user.id,
+        answer_type=state_data["answer_type"],
+        text_answer=message.text,
+    )
+
+    with Actions() as act:
+        act.add_answer(answer)
+
+    log_event(
+        message.from_user.id,
+        Events.DontKnow,
+        state_data["speciality"],
+        state_data["question_id"],
+    )
+
+    view = views.get_do_you_want_to_get_correct_answer()
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await DialogueStates.DO_YOU_WANT_GET_ANSWER.set()
 
 
 @dp.message_handler(
     content_types=[aiotypes.ContentType.TEXT, aiotypes.ContentType.VOICE],
     state=DialogueStates.ASK_QUESTION,
 )
-async def get_answer(message: aiotypes.Message, state: FSMContext):
+async def get_answer_from_user(message: aiotypes.Message, state: FSMContext):
     """
     Читает ответ пользователя
     """
@@ -304,6 +357,24 @@ async def get_answer(message: aiotypes.Message, state: FSMContext):
         voice_id or message.text,
         state_data["answer_type"],
     )
+
+    view = views.get_correct_answer(message.from_user.id)
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await DialogueStates.GOT_ANSWER.set()
+
+
+@dp.message_handler(regexp="Эталонный ответ", state=DialogueStates.DO_YOU_WANT_GET_ANSWER)
+async def sent_correct_answer_to_user(message: aiotypes.Message, state: FSMContext):
+    """
+    Отпраляет эталонный ответ пользователю
+    """
 
     view = views.get_correct_answer(message.from_user.id)
 

@@ -26,3 +26,5 @@ class Events(Enum):
     BotGrade = "bot_grade"
     BotReview = "bot_review"
     Thanks = "thanks"
+    DontKnow = "don't know"
+    Unclear2 = "unclear 2"
