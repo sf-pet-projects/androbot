@@ -170,7 +170,7 @@ async def after_select_answer_type(message: aiotypes.Message, state: FSMContext)
 @dp.message_handler(regexp="Отмена", state=DialogueStates.ARE_YOU_READY_FOR_TEST)
 @dp.message_handler(regexp="Главное меню", state=DialogueStates.GOT_ANSWER)
 @dp.message_handler(regexp="Главное меню", state=DialogueStates.HAS_STARTED_TEST)
-@dp.message_handler(regexp="Главное меню", state=DialogueStates.NO_NEW_QUESTIONS)
+@dp.message_handler(regexp="Главное меню", state=DialogueStates.USER_SCORE)
 async def back_to_main_menu(message: aiotypes.Message):
     """
     Возвращаемся в главное меню
@@ -202,6 +202,10 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
 
     view = views.get_next_question(message.from_user.id, state_data["answer_type"])
 
+    if not view.question_id:
+        await show_user_score(message, state)
+        return
+
     await bot.send_message(
         text=view.text,
         chat_id=message.chat.id,
@@ -213,10 +217,7 @@ async def get_another_question(message: aiotypes.Message, state: FSMContext):
 
     await state.update_data(question_id=view.question_id)
 
-    if view.question_id:
-        await DialogueStates.ASK_QUESTION.set()
-    else:
-        await DialogueStates.NO_NEW_QUESTIONS.set()
+    await DialogueStates.ASK_QUESTION.set()
 
 
 @dp.message_handler(regexp="Не понял вопрос", state=DialogueStates.ASK_QUESTION)
@@ -386,3 +387,26 @@ async def sent_correct_answer_to_user(message: aiotypes.Message, state: FSMConte
     )
 
     await DialogueStates.GOT_ANSWER.set()
+
+
+async def show_user_score(message: aiotypes.Message, state: FSMContext):
+    """
+    Вопросы концились, покажем пользователю его оценку. Больше вопрос нет
+    """
+
+    state_data = await state.get_data()
+
+    count_need_help = state_data.get("count_need_help", 0)
+
+    log_event(message.from_user.id, Events.FinishSpeciality, state_data["speciality"], count_need_help)
+
+    view = views.get_user_score_view(message.from_user.id)
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await DialogueStates.USER_SCORE.set()

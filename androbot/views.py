@@ -160,3 +160,26 @@ def get_do_you_want_to_get_correct_answer() -> View:
     reply_kb.row(*row_buttons)
 
     return View(answer_text, reply_kb)
+
+
+def get_user_score_view(user_id: int):
+    """
+    Возвращает view оценки пользователя
+    """
+
+    user_score = "X"
+    user_score_description = "...."
+
+    answer_text = render_message(
+        get_template("51_user_score"), user_score=user_score, user_score_description=user_score_description
+    )
+
+    row_buttons = [
+        aiotypes.KeyboardButton("👍 Оценить бота"),
+        aiotypes.KeyboardButton("🏠 Главное меню"),
+    ]
+
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    reply_kb.row(*row_buttons)
+
+    return View(answer_text, reply_kb)
