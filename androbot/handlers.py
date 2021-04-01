@@ -391,7 +391,7 @@ async def sent_correct_answer_to_user(message: aiotypes.Message, state: FSMConte
 
 async def show_user_score(message: aiotypes.Message, state: FSMContext):
     """
-    Вопросы концились, покажем пользователю его оценку. Больше вопрос нет
+    Вопросы кончились, покажем пользователю его оценку. Больше вопрос нет
     """
 
     state_data = await state.get_data()
