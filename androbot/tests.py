@@ -320,11 +320,29 @@ def test_add_bot_score():
     with Actions() as act:
         act.add_user(user)
         act.add_bot_score(user, 5)
-        assert act.get_bot_review(user).bot_score == 5
+        assert act.get_bot_review(user)[0].bot_score == 5
         act.add_bot_score(user, 3)
-        assert act.get_bot_review(user).bot_score == 3
+        assert act.get_bot_review(user)[0].bot_score == 3
         with pytest.raises(WrongBotScoreFormat):
             act.add_bot_score(user, 15)
+
+
+def test_add_bot_review():
+    user = TelegramUser(
+        tg_user_id=Utils.get_random_number(5),
+        name=Utils.get_random_text(10),
+        username=Utils.get_random_text(10),
+        specialty="test",
+    )
+    with Actions() as act:
+        my_review = "Some review"
+        my_other_review = "Some new review"
+        act.add_user(user)
+        act.add_bot_review(user, my_review, AnswerTypes.VOICE.value)
+        assert act.get_bot_review(user)[0].bot_review == my_review
+        act.add_bot_review(user, my_other_review, AnswerTypes.TEXT.value)
+        assert act.get_bot_review(user)[1].bot_review == my_other_review
+        assert act.get_bot_review(user)[1].bot_review_type == AnswerTypes.TEXT.value
 
 
 def test_add_problem_question_review():

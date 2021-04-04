@@ -195,7 +195,23 @@ def add_bot_score(db: Session, tg_user_id: int, bot_score: int) -> BotReview:
         commit_into_db(db, db_review)
         return db_review
     else:
-        bot_review = models.BotReview(tg_user_id=tg_user_id, bot_score=bot_score)
+        bot_review = models.BotReview(tg_user_id=tg_user_id, bot_score=bot_score, bot_review=None, bot_review_type=None)
+        commit_into_db(db, bot_review)
+        return bot_review
+
+
+def add_bot_review(db: Session, tg_user_id: int, review: str, review_type: str) -> BotReview:
+    db_review = db.query(BotReview).filter(models.BotReview.tg_user_id == tg_user_id).first()
+    if db_review is not None:
+        bot_review = models.BotReview(
+            tg_user_id=tg_user_id, bot_score=db_review.bot_score, bot_review=review, bot_review_type=review_type
+        )
+        commit_into_db(db, bot_review)
+        return db_review
+    else:
+        bot_review = models.BotReview(
+            tg_user_id=tg_user_id, bot_score=None, bot_review=review, bot_review_type=review_type
+        )
         commit_into_db(db, bot_review)
         return bot_review
 
@@ -213,8 +229,8 @@ def get_question_score(db: Session, question_id: int, tg_user_id: int) -> List[Q
     return db_question_score
 
 
-def get_bot_review(db: Session, tg_user_id: int) -> BotReview:
-    db_review = db.query(BotReview).filter(models.BotReview.tg_user_id == tg_user_id).first()
+def get_bot_review(db: Session, tg_user_id: int) -> List[BotReview]:
+    db_review = db.query(BotReview).filter(models.BotReview.tg_user_id == tg_user_id)
     return db_review
 
 

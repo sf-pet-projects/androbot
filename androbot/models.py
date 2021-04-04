@@ -67,7 +67,9 @@ class BotReview(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
     tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
-    bot_score = Column(Integer, unique=False, index=True)
+    bot_score = Column(Integer, unique=False, index=True, nullable=True)
+    bot_review = Column(String, unique=False, index=True, nullable=True)
+    bot_review_type = Column(String, unique=False, index=True, nullable=True)
 
 
 class QuestionScore(Base):

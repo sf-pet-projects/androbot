@@ -151,7 +151,10 @@ class Actions:
             raise WrongBotScoreFormat("You can have only 1 to 10 score in field BotReview.bot_score")
         return crud.add_bot_score(self.db, user.tg_user_id, bot_score)
 
-    def get_bot_review(self, user: schemas.TelegramUser) -> BotReview:
+    def add_bot_review(self, user: schemas.TelegramUser, review: str, review_type: str) -> BotReview:
+        return crud.add_bot_review(self.db, user.tg_user_id, review, review_type)
+
+    def get_bot_review(self, user: schemas.TelegramUser) -> List[BotReview]:
         return crud.get_bot_review(self.db, user.tg_user_id)
 
     def add_problem_question_review(
