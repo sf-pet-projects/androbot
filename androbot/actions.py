@@ -8,7 +8,7 @@ from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
 from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException, WrongBotScoreFormat
-from .models import Answer, BotReview, ProblemQuestionReview, Question, QuestionScore, TelegramUser
+from .models import AdditionalInfo, Answer, BotReview, ProblemQuestionReview, Question, QuestionScore, TelegramUser
 from .types_ import AnswerTypes, Specialty
 
 
@@ -81,6 +81,9 @@ class Actions:
     def remove_question_score(self, tg_user_id: int, question_id: int) -> None:
         crud.remove_question_score(self.db, tg_user_id, question_id)
 
+    def remove_train_material(self, tg_user_id: int, question_id: int) -> None:
+        crud.remove_train_material(self.db, tg_user_id, question_id)
+
     def get_next_test(self, tg_user_id: int) -> Question:
         tg_user = crud.get_tg_user(self.db, tg_user_id)
         passed_questions = crud.get_passed_questions(self.db, tg_user_id)
@@ -100,6 +103,12 @@ class Actions:
 
     def has_started_test(self, tg_user_id: int) -> bool:
         return crud.get_current_question(self.db, tg_user_id) is not None
+
+    def add_train_material(self, question_id: int, tg_user_id: int) -> None:
+        return crud.add_train_material(self.db, question_id, tg_user_id)
+
+    def get_train_material(self, question_id: int, tg_user_id: int) -> List[AdditionalInfo]:
+        return crud.get_train_material(self.db, question_id, tg_user_id)
 
     def get_current_question(self, tg_user_id: int) -> Optional[Question]:
         quest_id = crud.get_current_question(self.db, tg_user_id)

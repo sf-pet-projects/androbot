@@ -87,3 +87,11 @@ class ProblemQuestionReview(Base):
     tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
     review = Column(String, unique=False, index=True)
     review_type = Column(String, unique=False, index=True)
+
+
+class AdditionalInfo(Base):
+    __tablename__ = "additional_info"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
+    question_id = Column(Integer, ForeignKey("question.id"))
+    tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))

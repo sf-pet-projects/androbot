@@ -2,8 +2,11 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
+from androbot.database import Base
+
 from . import models, schemas
 from .models import (
+    AdditionalInfo,
     Answer,
     BotReview,
     CurrentSession,
@@ -123,6 +126,13 @@ def remove_question_score(db: Session, user_id: int, question_id: int) -> None:
     db.commit()
 
 
+def remove_train_material(db: Session, user_id: int, question_id: int) -> None:
+    db.query(AdditionalInfo).filter(
+        models.AdditionalInfo.tg_user_id == user_id and models.AdditionalInfo.question_id == question_id
+    ).delete()
+    db.commit()
+
+
 def get_passed_questions(db: Session, tg_user_id: int) -> List[int]:
     return db.query(models.Answer.quest_id).filter(models.Answer.tg_user_id == tg_user_id).all()
 
@@ -161,6 +171,11 @@ def get_current_question(db: Session, tg_user_id: int) -> Optional[int]:
         return None
 
 
+def add_train_material(db: Session, question_id: int, tg_user_id: int) -> None:
+    additional_info = models.AdditionalInfo(tg_user_id=tg_user_id, question_id=question_id)
+    commit_into_db(db, additional_info)
+
+
 def get_all_questions(db: Session, specialty: str) -> List[Question]:
     return db.query(models.Question.id).filter(models.Question.question_type == specialty).all()
 
@@ -169,30 +184,27 @@ def get_question(db: Session, quest_id: int) -> Question:
     return db.query(Question).filter(models.Question.id == quest_id).first()
 
 
+def get_train_material(db: Session, quest_id: int, user_id: int) -> List[AdditionalInfo]:
+    return db.query(AdditionalInfo).filter(
+        models.AdditionalInfo.question_id == quest_id and models.AdditionalInfo.tg_user_id == user_id
+    )
+
+
 def add_bot_score(db: Session, tg_user_id: int, bot_score: int) -> BotReview:
     db_review = db.query(BotReview).filter(models.BotReview.tg_user_id == tg_user_id).first()
     if db_review is not None:
         db_review.bot_score = bot_score
-        db.add(db_review)
-        db.commit()
-        db.refresh(db_review)
-        db.close()
+        commit_into_db(db, db_review)
         return db_review
     else:
         bot_review = models.BotReview(tg_user_id=tg_user_id, bot_score=bot_score)
-        db.add(bot_review)
-        db.commit()
-        db.refresh(bot_review)
-        db.close()
+        commit_into_db(db, bot_review)
         return bot_review
 
 
 def add_question_score(db: Session, question_id: int, user_id: int, is_correct: bool) -> QuestionScore:
     db_question_score = models.QuestionScore(question_id=question_id, tg_user_id=user_id, is_correct=is_correct)
-    db.add(db_question_score)
-    db.commit()
-    db.refresh(db_question_score)
-    db.close()
+    commit_into_db(db, db_question_score)
     return db_question_score
 
 
@@ -219,8 +231,12 @@ def add_problem_question_review(
     db_problem = models.ProblemQuestionReview(
         question_id=question_id, tg_user_id=user_id, review=review, review_type=review_type
     )
-    db.add(db_problem)
-    db.commit()
-    db.refresh(db_problem)
-    db.close()
+    commit_into_db(db, db_problem)
     return db_problem
+
+
+def commit_into_db(db: Session, data: Base):
+    db.add(data)
+    db.commit()
+    db.refresh(data)
+    db.close()
