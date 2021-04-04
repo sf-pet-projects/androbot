@@ -107,8 +107,8 @@ class Actions:
     def add_train_material(self, question_id: int, tg_user_id: int) -> None:
         return crud.add_train_material(self.db, question_id, tg_user_id)
 
-    def get_train_material(self, question_id: int, tg_user_id: int) -> List[AdditionalInfo]:
-        return crud.get_train_material(self.db, question_id, tg_user_id)
+    def get_train_material(self, tg_user_id: int) -> List[AdditionalInfo]:
+        return crud.get_train_material(self.db, tg_user_id)
 
     def get_current_question(self, tg_user_id: int) -> Optional[Question]:
         quest_id = crud.get_current_question(self.db, tg_user_id)

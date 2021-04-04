@@ -401,7 +401,7 @@ def test_add_train_material():
             act.add_user(user)
             act.add_question(question)
             act.add_train_material(question.id, user.tg_user_id)
-            assert act.get_train_material(question.id, user.tg_user_id)[0].tg_user_id == user.tg_user_id
+            assert act.get_train_material(user.tg_user_id)[0].tg_user_id == user.tg_user_id
     finally:
         act.remove_train_material(user.tg_user_id, question.id)
         act.remove_user(user)

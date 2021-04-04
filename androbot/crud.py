@@ -184,10 +184,8 @@ def get_question(db: Session, quest_id: int) -> Question:
     return db.query(Question).filter(models.Question.id == quest_id).first()
 
 
-def get_train_material(db: Session, quest_id: int, user_id: int) -> List[AdditionalInfo]:
-    return db.query(AdditionalInfo).filter(
-        models.AdditionalInfo.question_id == quest_id and models.AdditionalInfo.tg_user_id == user_id
-    )
+def get_train_material(db: Session, user_id: int) -> List[AdditionalInfo]:
+    return db.query(AdditionalInfo).filter(models.AdditionalInfo.tg_user_id == user_id)
 
 
 def add_bot_score(db: Session, tg_user_id: int, bot_score: int) -> BotReview:
