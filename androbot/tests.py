@@ -7,6 +7,7 @@ from androbot.actions import Actions, get_main_menu, start_new_test
 from androbot.errors import NoNewQuestionsException, UserExistsException, UserNotExistsException, WrongBotScoreFormat
 from androbot.schemas import Answer, EventsLog, Question, TelegramUser
 from androbot.types_ import AnswerTypes, Events, Specialty
+from androbot.types_.user_score import UserScore
 from androbot.utils import Utils
 
 
@@ -372,11 +373,11 @@ def test_add_question_score():
     with Actions() as act:
         act.add_user(user)
         act.add_question(question)
-        act.add_question_score(question.id, user.tg_user_id, False)
-        assert act.get_question_score(question.id, user.tg_user_id)[0].is_correct is False
-        act.add_question_score(question.id, user.tg_user_id, True)
-        assert act.get_question_score(question.id, user.tg_user_id)[1].is_correct is True
-    act.remove_question_score(user.tg_user_id, question.id)
+        act.add_question_score(question.id, user.tg_user_id, UserScore.PARTLY.value)
+        assert act.get_question_score(question.id, user.tg_user_id)[0].score == UserScore.PARTLY.value
+        act.add_question_score(question.id, user.tg_user_id, UserScore.RIGHT.value)
+        assert act.get_question_score(question.id, user.tg_user_id)[1].score == UserScore.RIGHT.value
+    act.remove_question_score(question.id)
     act.remove_user(user)
     act.remove_questions("test")
 

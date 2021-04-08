@@ -78,8 +78,8 @@ class Actions:
     def remove_problem_question_review(self, tg_user_id: int, question_id: int) -> None:
         crud.remove_problem_question_review(self.db, tg_user_id, question_id)
 
-    def remove_question_score(self, tg_user_id: int, question_id: int) -> None:
-        crud.remove_question_score(self.db, tg_user_id, question_id)
+    def remove_question_score(self, question_id: int) -> None:
+        crud.remove_question_score(self.db, question_id)
 
     def remove_train_material(self, tg_user_id: int, question_id: int) -> None:
         crud.remove_train_material(self.db, tg_user_id, question_id)
@@ -165,8 +165,8 @@ class Actions:
     def get_problem_question_review(self, tg_user_id: int) -> List[ProblemQuestionReview]:
         return crud.get_problem_question_review(self.db, tg_user_id)
 
-    def add_question_score(self, question_id: int, tg_user_id: int, is_correct: bool) -> QuestionScore:
-        return crud.add_question_score(self.db, question_id, tg_user_id, is_correct)
+    def add_question_score(self, question_id: int, tg_user_id: int, score: int) -> QuestionScore:
+        return crud.add_question_score(self.db, question_id, tg_user_id, score)
 
     def get_question_score(self, question_id: int, tg_user_id: int) -> List[QuestionScore]:
         return crud.get_question_score(self.db, question_id, tg_user_id)

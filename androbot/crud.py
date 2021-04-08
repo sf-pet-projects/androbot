@@ -221,11 +221,11 @@ def add_bot_review(db: Session, tg_user_id: int, review: str, review_type: str) 
         return bot_review
 
 
-def add_question_score(db: Session, question_id: int, user_id: int, is_correct: bool) -> QuestionScore:
+def add_question_score(db: Session, question_id: int, tg_user_id: int, score: int) -> QuestionScore:
     """
     Добавить оценку вопроса
     """
-    db_question_score = models.QuestionScore(question_id=question_id, tg_user_id=user_id, is_correct=is_correct)
+    db_question_score = models.QuestionScore(question_id=question_id, tg_user_id=tg_user_id, score=score)
     commit_into_db(db, db_question_score)
     return db_question_score
 
@@ -330,13 +330,11 @@ def remove_problem_question_review(db: Session, tg_user_id: int, question_id: in
     db.commit()
 
 
-def remove_question_score(db: Session, tg_user_id: int, question_id: int) -> None:
+def remove_question_score(db: Session, question_id: int) -> None:
     """
-    Удаляем оценку вопроса с question_id от пользователя с tg_user_id
+    Удаляем оценку вопроса с question_id
     """
-    db.query(QuestionScore).filter(
-        models.QuestionScore.tg_user_id == tg_user_id and models.QuestionScore.question_id == question_id
-    ).delete()
+    db.query(QuestionScore).filter(models.QuestionScore.question_id == question_id).delete()
     db.commit()
 
 
