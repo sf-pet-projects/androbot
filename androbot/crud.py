@@ -127,6 +127,7 @@ def set_current_question(db: Session, tg_user_id: int, quest_id: int) -> Session
         db_session = models.CurrentSession(
             quest_id=quest_id,
             tg_user_id=tg_user_id,
+            is_finished=True,
         )
         db.add(db_session)
     db.commit()
@@ -156,6 +157,13 @@ def get_current_question(db: Session, tg_user_id: int) -> Optional[int]:
         return session.quest_id
     else:
         return None
+
+
+def get_current_session(db: Session, tg_user_id: int) -> Optional[CurrentSession]:
+    """
+    Получаем текущую сессию пользователя tg_user_id
+    """
+    return db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
 
 
 def add_train_material(db: Session, question_id: int, tg_user_id: int) -> None:
@@ -237,6 +245,14 @@ def get_question_score(db: Session, question_id: int, tg_user_id: int) -> List[Q
     db_question_score = db.query(QuestionScore).filter(
         models.QuestionScore.tg_user_id == tg_user_id and models.QuestionScore.question_id == question_id
     )
+    return db_question_score
+
+
+def get_questions_scores(db: Session, tg_user_id: int) -> List[QuestionScore]:
+    """
+    Получаем все оценки вопросов от пользователя tg_user_id
+    """
+    db_question_score = db.query(QuestionScore).filter(models.QuestionScore.tg_user_id == tg_user_id)
     return db_question_score
 
 

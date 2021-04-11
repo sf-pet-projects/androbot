@@ -8,7 +8,16 @@ from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
 from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException, WrongBotScoreFormat
-from .models import AdditionalInfo, Answer, BotReview, ProblemQuestionReview, Question, QuestionScore, TelegramUser
+from .models import (
+    AdditionalInfo,
+    Answer,
+    BotReview,
+    CurrentSession,
+    ProblemQuestionReview,
+    Question,
+    QuestionScore,
+    TelegramUser,
+)
 from .types_ import AnswerTypes, Specialty
 
 
@@ -32,6 +41,9 @@ class Actions:
 
     def __enter__(self):
         return self
+
+    def __close__(self):
+        self.db.close()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.db.close()
@@ -112,6 +124,12 @@ class Actions:
         crud.set_current_question(self.db, tg_user_id, next_quest_id)
         next_quest = get_question(self.db, next_quest_id)
         return next_quest
+
+    def get_current_session(self, tg_user_id: int) -> Optional[CurrentSession]:
+        """
+        Получить текущую сессию пользователя
+        """
+        return crud.get_current_session(self.db, tg_user_id)
 
     def has_started_test(self, tg_user_id: int) -> bool:
         """
@@ -215,15 +233,21 @@ class Actions:
 
     def add_question_score(self, question_id: int, tg_user_id: int, score: int) -> QuestionScore:
         """
-        Добавить оценку вопроса от пользователя с tg_user_id по вопросу question_id
+        Добавить оценку вопроса question_id от пользователя с tg_user_id
         """
         return crud.add_question_score(self.db, question_id, tg_user_id, score)
 
     def get_question_score(self, question_id: int, tg_user_id: int) -> List[QuestionScore]:
         """
-        Получить оценку вопроса от пользователя с tg_user_id по вопросу question_id
+        Получить оценку вопроса question_id от пользователя с tg_user_id
         """
         return crud.get_question_score(self.db, question_id, tg_user_id)
+
+    def get_questions_scores(self, tg_user_id: int) -> List[QuestionScore]:
+        """
+        Получить оценки всех вопросов от пользователя с tg_user_id
+        """
+        return crud.get_questions_scores(self.db, tg_user_id)
 
     def remove_questions(self, specialty: str) -> None:
         """

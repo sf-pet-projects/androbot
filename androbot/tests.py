@@ -106,12 +106,16 @@ def test_get_next_test(act):
     act.add_question(question1)
     act.add_question(question2)
     act.add_question(question3)
+    act.get_next_test(user.tg_user_id)
+    session = act.get_current_session(user.tg_user_id)
+    assert session is not None
     answer1 = Answer(
         quest_id=question1.id,
         tg_user_id=user.tg_user_id,
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
+        session_id=session.id,
     )
     answer2 = Answer(
         quest_id=question2.id,
@@ -119,6 +123,7 @@ def test_get_next_test(act):
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
+        session_id=session.id,
     )
     answer3 = Answer(
         quest_id=question1.id,
@@ -126,6 +131,7 @@ def test_get_next_test(act):
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
+        session_id=session.id,
     )
     act.add_answer(answer1)
     act.add_answer(answer2)
