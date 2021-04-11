@@ -13,7 +13,9 @@ from androbot.utils import Utils
 
 @pytest.fixture()
 def act():
-    return Actions()
+    action = Actions()
+    yield action
+    action.__close__()
 
 
 def test_get_main_menu():
