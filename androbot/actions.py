@@ -8,7 +8,7 @@ from . import crud, schemas
 from .crud import get_question, is_tg_user_already_exist
 from .database import SessionLocal
 from .errors import NoNewQuestionsException, UserExistsException, UserNotExistsException, WrongBotScoreFormat
-from .models import Answer, BotReview, ProblemQuestionReview, Question, QuestionScore, TelegramUser
+from .models import AdditionalInfo, Answer, BotReview, ProblemQuestionReview, Question, QuestionScore, TelegramUser
 from .types_ import AnswerTypes, Specialty
 
 
@@ -78,8 +78,11 @@ class Actions:
     def remove_problem_question_review(self, tg_user_id: int, question_id: int) -> None:
         crud.remove_problem_question_review(self.db, tg_user_id, question_id)
 
-    def remove_question_score(self, tg_user_id: int, question_id: int) -> None:
-        crud.remove_question_score(self.db, tg_user_id, question_id)
+    def remove_question_score(self, question_id: int) -> None:
+        crud.remove_question_score(self.db, question_id)
+
+    def remove_train_material(self, tg_user_id: int, question_id: int) -> None:
+        crud.remove_train_material(self.db, tg_user_id, question_id)
 
     def get_next_test(self, tg_user_id: int) -> Question:
         tg_user = crud.get_tg_user(self.db, tg_user_id)
@@ -100,6 +103,12 @@ class Actions:
 
     def has_started_test(self, tg_user_id: int) -> bool:
         return crud.get_current_question(self.db, tg_user_id) is not None
+
+    def add_train_material(self, question_id: int, tg_user_id: int) -> None:
+        return crud.add_train_material(self.db, question_id, tg_user_id)
+
+    def get_train_material(self, tg_user_id: int) -> List[AdditionalInfo]:
+        return crud.get_train_material(self.db, tg_user_id)
 
     def get_current_question(self, tg_user_id: int) -> Optional[Question]:
         quest_id = crud.get_current_question(self.db, tg_user_id)
@@ -142,7 +151,10 @@ class Actions:
             raise WrongBotScoreFormat("You can have only 1 to 10 score in field BotReview.bot_score")
         return crud.add_bot_score(self.db, user.tg_user_id, bot_score)
 
-    def get_bot_review(self, user: schemas.TelegramUser) -> BotReview:
+    def add_bot_review(self, user: schemas.TelegramUser, review: str, review_type: str) -> BotReview:
+        return crud.add_bot_review(self.db, user.tg_user_id, review, review_type)
+
+    def get_bot_review(self, user: schemas.TelegramUser) -> List[BotReview]:
         return crud.get_bot_review(self.db, user.tg_user_id)
 
     def add_problem_question_review(
@@ -153,8 +165,8 @@ class Actions:
     def get_problem_question_review(self, tg_user_id: int) -> List[ProblemQuestionReview]:
         return crud.get_problem_question_review(self.db, tg_user_id)
 
-    def add_question_score(self, question_id: int, tg_user_id: int, is_correct: bool) -> QuestionScore:
-        return crud.add_question_score(self.db, question_id, tg_user_id, is_correct)
+    def add_question_score(self, question_id: int, tg_user_id: int, score: int) -> QuestionScore:
+        return crud.add_question_score(self.db, question_id, tg_user_id, score)
 
     def get_question_score(self, question_id: int, tg_user_id: int) -> List[QuestionScore]:
         return crud.get_question_score(self.db, question_id, tg_user_id)

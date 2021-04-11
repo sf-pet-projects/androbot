@@ -1,6 +1,6 @@
 import datetime as datetime
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -67,7 +67,9 @@ class BotReview(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
     tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
-    bot_score = Column(Integer, unique=False, index=True)
+    bot_score = Column(Integer, unique=False, index=True, nullable=True)
+    bot_review = Column(String, unique=False, index=True, nullable=True)
+    bot_review_type = Column(String, unique=False, index=True, nullable=True)
 
 
 class QuestionScore(Base):
@@ -76,7 +78,7 @@ class QuestionScore(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
     tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
     question_id = Column(Integer, ForeignKey("question.id"))
-    is_correct = Column(Boolean, unique=False, index=True)
+    score = Column(Integer, unique=False, index=True)
 
 
 class ProblemQuestionReview(Base):
@@ -87,3 +89,11 @@ class ProblemQuestionReview(Base):
     tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
     review = Column(String, unique=False, index=True)
     review_type = Column(String, unique=False, index=True)
+
+
+class AdditionalInfo(Base):
+    __tablename__ = "additional_info"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
+    question_id = Column(Integer, ForeignKey("question.id"))
+    tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
