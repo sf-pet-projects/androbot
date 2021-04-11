@@ -126,7 +126,7 @@ def get_correct_answer(tg_user_id: int) -> View:
     Возвращает View с правильным ответом
     """
     with actions.Actions() as act:
-        correct_answer = act.get_current_question(tg_user_id).text_answer.strip()
+        correct_answer = act.get_current_question(tg_user_id).text_answer.strip().replace("_", "\\_")
 
     if not correct_answer:
         correct_answer = "К сожалению мы не подготовили правильный ответ на данный вопрос"
@@ -135,6 +135,30 @@ def get_correct_answer(tg_user_id: int) -> View:
 
     row_buttons = [
         aiotypes.KeyboardButton("📚 Отправь материалы"),
+        aiotypes.KeyboardButton("➡️ Следующий вопрос"),
+    ]
+
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    reply_kb.row(*row_buttons)
+
+    return View(answer_text, reply_kb)
+
+
+def get_additional_materials_view(tg_user_id: int) -> View:
+    """
+    Возвращает View с дополнительными материалами
+    """
+    with actions.Actions() as act:
+        additional_info = act.get_current_question(tg_user_id).additional_info.strip().replace("_", "\\_")
+
+    if not additional_info:
+        additional_info = "К сожалению мы не подготовили материалы к данному вопросу"
+    else:
+        additional_info = "Материалы для повторения...\n{}\n".format(additional_info)
+
+    answer_text = render_message(get_template("42_additional_materials"), additional_info=additional_info)
+
+    row_buttons = [
         aiotypes.KeyboardButton("➡️ Следующий вопрос"),
     ]
 

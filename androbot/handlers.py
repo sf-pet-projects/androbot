@@ -372,9 +372,9 @@ async def get_answer_from_user(message: aiotypes.Message, state: FSMContext):
 
 
 @dp.message_handler(regexp="Эталонный ответ", state=DialogueStates.DO_YOU_WANT_GET_ANSWER)
-async def sent_correct_answer_to_user(message: aiotypes.Message, state: FSMContext):
+async def send_correct_answer_to_user(message: aiotypes.Message):
     """
-    Отпраляет эталонный ответ пользователю
+    Отправляет эталонный ответ пользователю
     """
 
     view = views.get_correct_answer(message.from_user.id)
@@ -389,6 +389,27 @@ async def sent_correct_answer_to_user(message: aiotypes.Message, state: FSMConte
     await DialogueStates.GOT_ANSWER.set()
 
 
+@dp.message_handler(regexp="Отправь материалы", state=DialogueStates.GOT_ANSWER)
+async def send_additional_materials_to_user(message: aiotypes.Message, state: FSMContext):
+    """
+    Отправляет дополнительные материалы по вопросу
+    """
+
+    view = views.get_additional_materials_view(message.from_user.id)
+
+    # запишем сколько раз просил доп.материалы
+    state_data = await state.get_data()
+    count_got_additional_materials = state_data.get("count_got_additional_materials", 0) + 1
+    await state.update_data(count_got_additional_materials=count_got_additional_materials)
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+
 async def show_user_score(message: aiotypes.Message, state: FSMContext):
     """
     Вопросы кончились, покажем пользователю его оценку. Больше вопрос нет
@@ -396,9 +417,9 @@ async def show_user_score(message: aiotypes.Message, state: FSMContext):
 
     state_data = await state.get_data()
 
-    count_need_help = state_data.get("count_need_help", 0)
+    count_got_additional_materials = state_data.get("count_got_additional_materials", 0)
 
-    log_event(message.from_user.id, Events.FinishSpeciality, state_data["speciality"], count_need_help)
+    log_event(message.from_user.id, Events.FinishSpeciality, state_data["speciality"], count_got_additional_materials)
 
     view = views.get_user_score_view(message.from_user.id)
 
