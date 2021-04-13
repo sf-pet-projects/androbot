@@ -184,7 +184,7 @@ def get_train_material(db: Session, tg_user_id: int) -> List[AdditionalInfo]:
     """
     Получаем тренировочные материалы для пользователя tg_user_id
     """
-    return db.query(AdditionalInfo).filter(models.AdditionalInfo.tg_user_id == tg_user_id)
+    return list(db.query(AdditionalInfo).filter(models.AdditionalInfo.tg_user_id == tg_user_id))
 
 
 def add_bot_score(db: Session, tg_user_id: int, bot_score: int) -> BotReview:
@@ -345,4 +345,12 @@ def remove_train_material(db: Session, tg_user_id: int, question_id: int) -> Non
     db.query(AdditionalInfo).filter(
         models.AdditionalInfo.tg_user_id == tg_user_id and models.AdditionalInfo.question_id == question_id
     ).delete()
+    db.commit()
+
+
+def remove_train_materials(db: Session, tg_user_id: int) -> None:
+    """
+    Удаляем тренировочные материалы для пользователя c tg_user_id
+    """
+    db.query(AdditionalInfo).filter(models.AdditionalInfo.tg_user_id == tg_user_id).delete()
     db.commit()

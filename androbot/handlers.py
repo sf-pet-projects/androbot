@@ -264,6 +264,11 @@ async def get_why_not_understand_question(message: aiotypes.Message, state: FSMC
         message.text,
     )
 
+    with Actions() as act:
+        act.add_problem_question_review(
+            state_data["question_id"], message.from_user.id, message.text, AnswerTypes(state_data["answer_type"])
+        )
+
     view = views.get_do_you_want_to_get_correct_answer()
 
     await bot.send_message(
@@ -397,10 +402,10 @@ async def send_additional_materials_to_user(message: aiotypes.Message, state: FS
 
     view = views.get_additional_materials_view(message.from_user.id)
 
-    # запишем сколько раз просил доп.материалы
     state_data = await state.get_data()
-    count_got_additional_materials = state_data.get("count_got_additional_materials", 0) + 1
-    await state.update_data(count_got_additional_materials=count_got_additional_materials)
+
+    with Actions() as act:
+        act.add_train_material(state_data["question_id"], message.from_user.id)
 
     await bot.send_message(
         text=view.text,
@@ -417,7 +422,8 @@ async def show_user_score(message: aiotypes.Message, state: FSMContext):
 
     state_data = await state.get_data()
 
-    count_got_additional_materials = state_data.get("count_got_additional_materials", 0)
+    with Actions() as act:
+        count_got_additional_materials = len(act.get_train_material(message.from_user.id))
 
     log_event(message.from_user.id, Events.FinishSpeciality, state_data["speciality"], count_got_additional_materials)
 

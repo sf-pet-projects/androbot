@@ -129,9 +129,9 @@ def get_correct_answer(tg_user_id: int) -> View:
         correct_answer = act.get_current_question(tg_user_id).text_answer.strip().replace("_", "\\_")
 
     if not correct_answer:
-        correct_answer = "К сожалению мы не подготовили правильный ответ на данный вопрос"
-
-    answer_text = render_message(get_template("40_correct_answer"), correct_answer=correct_answer)
+        answer_text = render_message(get_template("40_no_correct_answer"))
+    else:
+        answer_text = render_message(get_template("41_correct_answer"), correct_answer=correct_answer)
 
     row_buttons = [
         aiotypes.KeyboardButton("📚 Отправь материалы"),
@@ -156,7 +156,7 @@ def get_additional_materials_view(tg_user_id: int) -> View:
     else:
         additional_info = "Материалы для повторения...\n{}\n".format(additional_info)
 
-    answer_text = render_message(get_template("42_additional_materials"), additional_info=additional_info)
+    answer_text = render_message(get_template("46_additional_materials"), additional_info=additional_info)
 
     row_buttons = [
         aiotypes.KeyboardButton("➡️ Следующий вопрос"),
@@ -173,7 +173,7 @@ def get_do_you_want_to_get_correct_answer() -> View:
     Возвращает View с предолжением узнать эталонный ответ, или идти дальше
     """
 
-    answer_text = render_message(get_template("41_do_you_want_to_get_correct_answer"))
+    answer_text = render_message(get_template("45_do_you_want_to_get_correct_answer"))
 
     row_buttons = [
         aiotypes.KeyboardButton("💡 Эталонный ответ"),
