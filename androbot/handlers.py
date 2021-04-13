@@ -168,7 +168,8 @@ async def after_select_answer_type(message: aiotypes.Message, state: FSMContext)
 
 
 @dp.message_handler(regexp="Отмена", state=DialogueStates.ARE_YOU_READY_FOR_TEST)
-@dp.message_handler(regexp="Главное меню", state=DialogueStates.GOT_ANSWER)
+@dp.message_handler(regexp="Главное меню", state=DialogueStates.NO_ANSWER)
+@dp.message_handler(regexp="Главное меню", state=DialogueStates.ANSWER_SCORED_BY_USER)
 @dp.message_handler(regexp="Главное меню", state=DialogueStates.HAS_STARTED_TEST)
 @dp.message_handler(regexp="Главное меню", state=DialogueStates.USER_SCORE)
 async def back_to_main_menu(message: aiotypes.Message):
@@ -192,7 +193,7 @@ async def back_to_main_menu(message: aiotypes.Message):
 @dp.message_handler(regexp="Готов!", state=DialogueStates.ARE_YOU_READY_FOR_TEST)
 @dp.message_handler(
     regexp="Следующий вопрос",
-    state=[DialogueStates.GOT_ANSWER, DialogueStates.DO_YOU_WANT_GET_ANSWER],
+    state=[DialogueStates.NO_ANSWER, DialogueStates.ANSWER_SCORED_BY_USER, DialogueStates.DO_YOU_WANT_GET_ANSWER],
 )
 async def get_another_question(message: aiotypes.Message, state: FSMContext):
     """
@@ -298,6 +299,7 @@ async def do_not_know_question(message: aiotypes.Message, state: FSMContext):
     )
 
     with Actions() as act:
+        act.add_question_score(state_data["question_id"], message.from_user.id, score=0)
         act.add_answer(answer)
 
     log_event(
@@ -373,7 +375,8 @@ async def get_answer_from_user(message: aiotypes.Message, state: FSMContext):
         reply_markup=view.markup,
     )
 
-    await DialogueStates.GOT_ANSWER.set()
+    if view.state:
+        await view.state.set()
 
 
 @dp.message_handler(regexp="Эталонный ответ", state=DialogueStates.DO_YOU_WANT_GET_ANSWER)
@@ -391,10 +394,44 @@ async def send_correct_answer_to_user(message: aiotypes.Message):
         reply_markup=view.markup,
     )
 
-    await DialogueStates.GOT_ANSWER.set()
+    if view.state:
+        await view.state.set()
 
 
-@dp.message_handler(regexp="Отправь материалы", state=DialogueStates.GOT_ANSWER)
+@dp.message_handler(regexp="Верный", state=DialogueStates.GOT_ANSWER)
+@dp.message_handler(regexp="Частично верный", state=DialogueStates.GOT_ANSWER)
+@dp.message_handler(regexp="Неверный", state=DialogueStates.GOT_ANSWER)
+async def get_self_score_by_user(message: aiotypes.Message, state: FSMContext):
+    """
+    Получаем и записываем оценку от пользователя, предлагаем материалы для повторения
+    """
+    state_data = await state.get_data()
+
+    user_answer = message.text.lower()
+
+    if "неверный" in user_answer:
+        answer_score = 0
+    elif "частично" in user_answer:
+        answer_score = 1
+    else:
+        answer_score = 2
+
+    with Actions() as act:
+        act.add_question_score(state_data["question_id"], message.from_user.id, answer_score)
+
+    view = views.get_do_you_want_additional_materials_view()
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await DialogueStates.ANSWER_SCORED_BY_USER.set()
+
+
+@dp.message_handler(regexp="Отправь материалы", state=[DialogueStates.NO_ANSWER, DialogueStates.ANSWER_SCORED_BY_USER])
 async def send_additional_materials_to_user(message: aiotypes.Message, state: FSMContext):
     """
     Отправляет дополнительные материалы по вопросу

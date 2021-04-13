@@ -3,7 +3,7 @@ import aiogram.types as aiotypes
 from . import actions
 from .errors import NoNewQuestionsException
 from .templates import get_template, render_message
-from .types_ import AnswerTypes, View
+from .types_ import AnswerTypes, DialogueStates, View
 
 
 def get_hello_message(username: str) -> View:
@@ -130,8 +130,32 @@ def get_correct_answer(tg_user_id: int) -> View:
 
     if not correct_answer:
         answer_text = render_message(get_template("40_no_correct_answer"))
+        row_buttons = [
+            aiotypes.KeyboardButton("📚 Отправь материалы"),
+            aiotypes.KeyboardButton("➡️ Следующий вопрос"),
+        ]
+        state = DialogueStates.NO_ANSWER
     else:
         answer_text = render_message(get_template("41_correct_answer"), correct_answer=correct_answer)
+        row_buttons = [
+            aiotypes.KeyboardButton("❌ Неверный"),
+            aiotypes.KeyboardButton("⚖️ Частично верный"),
+            aiotypes.KeyboardButton("✅ Верный"),
+        ]
+        state = DialogueStates.GOT_ANSWER
+
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    reply_kb.row(*row_buttons)
+
+    return View(answer_text, reply_kb, state=state)
+
+
+def get_do_you_want_additional_materials_view() -> View:
+    """
+    Возвращает View с предолжением дополнительных материалов
+    """
+
+    answer_text = render_message(get_template("42_do_you_want_additional_materials"))
 
     row_buttons = [
         aiotypes.KeyboardButton("📚 Отправь материалы"),
@@ -152,7 +176,7 @@ def get_additional_materials_view(tg_user_id: int) -> View:
         additional_info = act.get_current_question(tg_user_id).additional_info.strip().replace("_", "\\_")
 
     if not additional_info:
-        additional_info = "К сожалению мы не подготовили материалы к данному вопросу"
+        additional_info = "К сожалению мы не подготовили материалы к этому вопросу"
     else:
         additional_info = "Материалы для повторения...\n{}\n".format(additional_info)
 
