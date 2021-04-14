@@ -171,3 +171,9 @@ class Actions:
 
     def get_question_score(self, question_id: int, tg_user_id: int) -> List[QuestionScore]:
         return crud.get_question_score(self.db, question_id, tg_user_id)
+
+    def get_questions_scores(self, tg_user_id: int) -> List[QuestionScore]:
+        """
+        Получить оценки всех вопросов от пользователя с tg_user_id
+        """
+        return list(crud.get_questions_scores(self.db, tg_user_id))

@@ -1,6 +1,6 @@
 import aiogram.types as aiotypes
 
-from . import actions
+from .actions import Actions, get_main_menu, start_new_test
 from .errors import NoNewQuestionsException
 from .templates import get_template, render_message
 from .types_ import AnswerTypes, DialogueStates, View
@@ -13,12 +13,12 @@ def get_hello_message(username: str) -> View:
     return View(render_message(get_template("01_hello"), username=username))
 
 
-def get_main_menu() -> View:
+def get_main_menu_view() -> View:
     """
     Возвращает View старатовой страницы бота
     """
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    for speciality in actions.get_main_menu():
+    for speciality in get_main_menu():
         btn_1 = aiotypes.KeyboardButton(f"✅ {speciality}")
         reply_kb.add(btn_1)
 
@@ -53,7 +53,7 @@ def get_select_answer_type_view() -> View:
     """
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     row_buttons = []
-    for answer_type in reversed(actions.start_new_test()):
+    for answer_type in reversed(start_new_test()):
         btn = aiotypes.KeyboardButton(answer_type)
         row_buttons.append(btn)
     reply_kb.row(*row_buttons)
@@ -82,7 +82,7 @@ def get_next_question(tg_user_id: int, answer_type: str) -> View:
     Возвращает View со следующим вопросом для пользователя
     """
     try:
-        with actions.Actions() as act:
+        with Actions() as act:
             question = act.get_next_test(tg_user_id)
 
     except NoNewQuestionsException:
@@ -125,7 +125,7 @@ def get_correct_answer(tg_user_id: int) -> View:
     """
     Возвращает View с правильным ответом
     """
-    with actions.Actions() as act:
+    with Actions() as act:
         correct_answer = act.get_current_question(tg_user_id).text_answer.strip().replace("_", "\\_")
 
     if not correct_answer:
@@ -172,7 +172,7 @@ def get_additional_materials_view(tg_user_id: int) -> View:
     """
     Возвращает View с дополнительными материалами
     """
-    with actions.Actions() as act:
+    with Actions() as act:
         additional_info = act.get_current_question(tg_user_id).additional_info.strip().replace("_", "\\_")
 
     if not additional_info:
@@ -215,8 +215,29 @@ def get_user_score_view(user_id: int):
     Возвращает view оценки пользователя
     """
 
-    user_score = "X"
-    user_score_description = "...."
+    with Actions() as act:
+        user_scores = act.get_questions_scores(user_id)
+
+    # score 0 - неверно, 1 - частично верно, 2 - верно
+    user_score = int(sum(x.score for x in user_scores) / len(user_scores) / 2 * 100)
+
+    if user_score > 84:
+        user_score_description = (
+            "Поздравляем! Вы готовы к прохождению технического собеседования! Самое время "
+            "опубликовать резюме, откликнуться на пару вакансий и двигаться вперед к своим целям."
+        )
+    elif user_score > 69:
+        user_score_description = (
+            "Отличный результат. Мы рекомендуем вам пройтись еще раз по верхам, решить пару "
+            "общих практических задач и смело публиковать резюме для прохождения технических"
+            " собеседований. Вперед к мечте!"
+        )
+    else:
+        user_score_description = (
+            "Хороший результат. Мы рекомендуем повторить все основные темы, отдельно по "
+            "каждой решить пару практических задач и освежить основные знания теории. А "
+            "потом вернуться к нашему боту еще раз. Будем вас ждать :)"
+        )
 
     answer_text = render_message(
         get_template("51_user_score"), user_score=user_score, user_score_description=user_score_description

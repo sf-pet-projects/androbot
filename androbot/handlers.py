@@ -35,7 +35,7 @@ async def send_start_screen(message: aiotypes.Message):
     except UserExistsException:
         pass
 
-    view = views.get_main_menu()
+    view = views.get_main_menu_view()
 
     await bot.send_message(
         text=view.text,
@@ -176,7 +176,7 @@ async def back_to_main_menu(message: aiotypes.Message):
     """
     Возвращаемся в главное меню
     """
-    view = views.get_main_menu()
+    view = views.get_main_menu_view()
 
     await bot.send_message(
         text=view.text,

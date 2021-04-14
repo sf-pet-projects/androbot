@@ -230,6 +230,14 @@ def add_question_score(db: Session, question_id: int, tg_user_id: int, score: in
     return db_question_score
 
 
+def get_questions_scores(db: Session, tg_user_id: int) -> List[QuestionScore]:
+    """
+    Получаем все оценки вопросов от пользователя tg_user_id
+    """
+    db_question_score = db.query(QuestionScore).filter(models.QuestionScore.tg_user_id == tg_user_id)
+    return db_question_score
+
+
 def get_question_score(db: Session, question_id: int, tg_user_id: int) -> List[QuestionScore]:
     """
     Получаем оценку вопроса question_id от пользователя tg_user_id
