@@ -5,7 +5,7 @@ from . import schemas, views
 from .actions import Actions, start_new_test
 from .errors import UserExistsException
 from .main import bot, dp
-from .types_ import AnswerTypes, DialogueStates, Events, Specialty
+from .types_ import AnswerTypes, DialogueStates, Events, Specialty, UserScore
 from .utils import log_event
 
 
@@ -167,11 +167,16 @@ async def after_select_answer_type(message: aiotypes.Message, state: FSMContext)
     await DialogueStates.next()
 
 
-@dp.message_handler(regexp="Отмена", state=DialogueStates.ARE_YOU_READY_FOR_TEST)
-@dp.message_handler(regexp="Главное меню", state=DialogueStates.NO_ANSWER)
-@dp.message_handler(regexp="Главное меню", state=DialogueStates.ANSWER_SCORED_BY_USER)
-@dp.message_handler(regexp="Главное меню", state=DialogueStates.HAS_STARTED_TEST)
-@dp.message_handler(regexp="Главное меню", state=DialogueStates.USER_SCORE)
+@dp.message_handler(
+    regexp="Отмена|Главное меню",
+    state=[
+        DialogueStates.ARE_YOU_READY_FOR_TEST,
+        DialogueStates.NO_ANSWER,
+        DialogueStates.ANSWER_SCORED_BY_USER,
+        DialogueStates.HAS_STARTED_TEST,
+        DialogueStates.USER_SCORE,
+    ],
+)
 async def back_to_main_menu(message: aiotypes.Message):
     """
     Возвращаемся в главное меню
@@ -190,10 +195,14 @@ async def back_to_main_menu(message: aiotypes.Message):
     await DialogueStates.MAIN_MENU.set()
 
 
-@dp.message_handler(regexp="Готов!", state=DialogueStates.ARE_YOU_READY_FOR_TEST)
 @dp.message_handler(
-    regexp="Следующий вопрос",
-    state=[DialogueStates.NO_ANSWER, DialogueStates.ANSWER_SCORED_BY_USER, DialogueStates.DO_YOU_WANT_GET_ANSWER],
+    regexp="Готов!|Следующий вопрос",
+    state=[
+        DialogueStates.ARE_YOU_READY_FOR_TEST,
+        DialogueStates.NO_ANSWER,
+        DialogueStates.ANSWER_SCORED_BY_USER,
+        DialogueStates.DO_YOU_WANT_GET_ANSWER,
+    ],
 )
 async def get_another_question(message: aiotypes.Message, state: FSMContext):
     """
@@ -398,26 +407,17 @@ async def send_correct_answer_to_user(message: aiotypes.Message):
         await view.state.set()
 
 
-@dp.message_handler(regexp="Верный", state=DialogueStates.GOT_ANSWER)
-@dp.message_handler(regexp="Частично верный", state=DialogueStates.GOT_ANSWER)
-@dp.message_handler(regexp="Неверный", state=DialogueStates.GOT_ANSWER)
+@dp.message_handler(regexp="|".join(score.description for score in UserScore), state=DialogueStates.GOT_ANSWER)
 async def get_self_score_by_user(message: aiotypes.Message, state: FSMContext):
     """
     Получаем и записываем оценку от пользователя, предлагаем материалы для повторения
     """
     state_data = await state.get_data()
 
-    user_answer = message.text.lower()
-
-    if "неверный" in user_answer:
-        answer_score = 0
-    elif "частично" in user_answer:
-        answer_score = 1
-    else:
-        answer_score = 2
+    answer_score = UserScore.by_description(message.text)
 
     with Actions() as act:
-        act.add_question_score(state_data["question_id"], message.from_user.id, answer_score)
+        act.add_question_score(state_data["question_id"], message.from_user.id, answer_score.value)
 
     view = views.get_do_you_want_additional_materials_view()
 

@@ -216,28 +216,17 @@ def get_user_score_view(user_id: int):
     """
 
     with Actions() as act:
-        user_scores = act.get_questions_scores(user_id)
+        user_scores = act.get_all_questions_scores(user_id)
 
-    # score 0 - неверно, 1 - частично верно, 2 - верно
+    # Делим на 2 потому что верный ответ это 2, частично верный 1
     user_score = int(sum(x.score for x in user_scores) / len(user_scores) / 2 * 100)
 
     if user_score > 84:
-        user_score_description = (
-            "Поздравляем! Вы готовы к прохождению технического собеседования! Самое время "
-            "опубликовать резюме, откликнуться на пару вакансий и двигаться вперед к своим целям."
-        )
+        user_score_description = get_template("52_result_excelent")
     elif user_score > 69:
-        user_score_description = (
-            "Отличный результат. Мы рекомендуем вам пройтись еще раз по верхам, решить пару "
-            "общих практических задач и смело публиковать резюме для прохождения технических"
-            " собеседований. Вперед к мечте!"
-        )
+        user_score_description = get_template("53_result_good")
     else:
-        user_score_description = (
-            "Хороший результат. Мы рекомендуем повторить все основные темы, отдельно по "
-            "каждой решить пару практических задач и освежить основные знания теории. А "
-            "потом вернуться к нашему боту еще раз. Будем вас ждать :)"
-        )
+        user_score_description = get_template("54_result_bad")
 
     answer_text = render_message(
         get_template("51_user_score"), user_score=user_score, user_score_description=user_score_description
