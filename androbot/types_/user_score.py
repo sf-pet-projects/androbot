@@ -6,12 +6,8 @@ class UserScore(Enum):
     PARTLY = 1, "Частично верный"
     RIGHT = 2, "Верный"
 
-    def __new__(cls, *args, **kwargs):
-        obj = object.__new__(cls)
-        obj._value_ = args[0]
-        return obj
-
-    def __init__(self, _: str, description: str = None):
+    def __init__(self, value: int, description: str = None):
+        self._value_ = value
         self._description_ = description
 
     @property
