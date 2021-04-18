@@ -324,11 +324,11 @@ def test_add_bot_review(act):
     my_review = "Some review"
     my_other_review = "Some new review"
     act.add_user(user)
-    act.add_bot_review(user, my_review, AnswerTypes.VOICE.value)
+    act.add_bot_review(user, my_review, AnswerTypes.VOICE)
     assert act.get_bot_review(user)[0].bot_review == my_review
-    act.add_bot_review(user, my_other_review, AnswerTypes.TEXT.value)
+    act.add_bot_review(user, my_other_review, AnswerTypes.TEXT)
     assert act.get_bot_review(user)[1].bot_review == my_other_review
-    assert act.get_bot_review(user)[1].bot_review_type == AnswerTypes.TEXT.value
+    assert act.get_bot_review(user)[1].bot_review_type == AnswerTypes.TEXT.name
 
 
 def test_add_problem_question_review(act):

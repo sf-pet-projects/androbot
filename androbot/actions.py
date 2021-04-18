@@ -50,7 +50,7 @@ class Actions:
 
     def add_user(self, tg_user: schemas.TelegramUser) -> TelegramUser:
         """
-        Добавляем пользователя в базу
+        Добавляем пользователя в базу данных
         """
         if is_tg_user_already_exist(self.db, tg_user.tg_user_id):
             raise UserExistsException("You try to add already exists user")
@@ -80,14 +80,14 @@ class Actions:
 
     def add_event(self, event: schemas.EventsLog) -> None:
         """
-        Добавляем событие
+        Добавляем в базу данных событие
         """
         crud.add_event(self.db, event)
         logger.info("Add event {}", event)
 
     def add_question(self, question: schemas.Question) -> Question:
         """
-        Добавляем вопрос
+        Добавляем в базу данных вопрос
         """
         db_question = crud.add_question(self.db, question)
         logger.info("Add question {}", question)
@@ -95,7 +95,7 @@ class Actions:
 
     def add_answer(self, answer: schemas.Answer) -> Optional[Answer]:
         """
-        Добавляем ответ пользователя на вопрос
+        Добавляем в базу данных ответ пользователя на вопрос
         """
         has_text_answer = answer.text_answer is not None and answer.text_answer.strip()
         has_voice_answer = answer.link_to_audio_answer is not None and answer.link_to_audio_answer.strip()
@@ -107,7 +107,7 @@ class Actions:
 
     def get_next_test(self, tg_user_id: int) -> Question:
         """
-        Получить следующий тест для пользователя tg_user_id
+        Получить из базы данных следующий тест для пользователя tg_user_id
         """
         tg_user = crud.get_tg_user(self.db, tg_user_id)
         passed_questions = crud.get_passed_questions(self.db, tg_user_id)
@@ -127,7 +127,7 @@ class Actions:
 
     def get_current_session(self, tg_user_id: int) -> Optional[CurrentSession]:
         """
-        Получить текущую сессию пользователя
+        Получить из базы данных текущую сессию пользователя
         """
         return crud.get_current_session(self.db, tg_user_id)
 
@@ -139,19 +139,20 @@ class Actions:
 
     def add_train_material(self, question_id: int, tg_user_id: int) -> None:
         """
-        Добавить тренировочный материал для пользователя tg_user_id по вопросу question_id
+        Добавить в базу данных признак того,
+        что пользователь c tg_user_id запросил дополнительный материал по вопросу question_id
         """
         return crud.add_train_material(self.db, question_id, tg_user_id)
 
     def get_train_material(self, tg_user_id: int) -> List[AdditionalInfo]:
         """
-        Получить список тренировочных материалов для пользователя tg_user_id
+        Получить из базы данных список вопросов по которым пользователь tg_user_id запросил дополнительный материал
         """
         return crud.get_train_material(self.db, tg_user_id)
 
     def get_current_question(self, tg_user_id: int) -> Optional[Question]:
         """
-        Получить текущий вопрос для пользователя (случайный вопрос из тех, на которые нет ответа)
+        Получить из базы данных текущий вопрос для пользователя (случайный вопрос из тех, на которые нет ответа)
         """
         quest_id = crud.get_current_question(self.db, tg_user_id)
         if quest_id is not None:
@@ -162,7 +163,7 @@ class Actions:
 
     def edit_specialty(self, tg_user_id: int, new_specialty: Specialty) -> None:
         """
-        Изменить специальность пользователя
+        Изменить в базе данных специальность пользователя
         """
         if is_tg_user_already_exist(self.db, tg_user_id):
             crud.edit_specialty(self.db, tg_user_id, new_specialty)
@@ -171,7 +172,7 @@ class Actions:
 
     def load_questions(self, specialty: Specialty, file: str) -> None:
         """
-        Загрузить вопросы в базу из csv файла `file`
+        Загрузить вопросы в базу данных из csv файла `file`
         """
         with open(file, encoding="utf-8") as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=";")
@@ -192,28 +193,28 @@ class Actions:
 
     def reset_session(self, user: schemas.TelegramUser) -> None:
         """
-        Сбросить сессию (удалить все ответы пользователя, удалить сессию)
+        Сбросить сессию (удалить все ответы пользователя, удалить сессию из базы данных)
         """
         crud.remove_answers(self.db, user.tg_user_id)
         crud.remove_sessions(self.db, user.tg_user_id)
 
     def add_bot_score(self, user: schemas.TelegramUser, bot_score: int) -> BotReview:
         """
-        Добавить оценку бота от пользователя
+        Добавить в базу данных оценку бота от пользователя
         """
         if bot_score not in range(1, 10):
             raise WrongBotScoreFormat("You can have only 1 to 10 score in field BotReview.bot_score")
         return crud.add_bot_score(self.db, user.tg_user_id, bot_score)
 
-    def add_bot_review(self, user: schemas.TelegramUser, review: str, review_type: str) -> BotReview:
+    def add_bot_review(self, user: schemas.TelegramUser, review: str, review_type: AnswerTypes) -> BotReview:
         """
-        Добавить ревью на бота от пользователя
+        Добавить в базу данных ревью на бота от пользователя
         """
-        return crud.add_bot_review(self.db, user.tg_user_id, review, review_type)
+        return crud.add_bot_review(self.db, user.tg_user_id, review, review_type.name)
 
     def get_bot_review(self, user: schemas.TelegramUser) -> List[BotReview]:
         """
-        Получить список ревью на бота от пользователя
+        Получить из базы данных список ревью на бота от пользователя
         """
         return crud.get_bot_review(self.db, user.tg_user_id)
 
@@ -221,54 +222,54 @@ class Actions:
         self, question_id: int, tg_user_id: int, review: str, review_type: AnswerTypes
     ) -> ProblemQuestionReview:
         """
-        Добавить ревью на вопрос question_id от пользователя с tg_user_id
+        Добавить в базу данных ревью на вопрос question_id от пользователя с tg_user_id
         """
         return crud.add_problem_question_review(self.db, question_id, tg_user_id, review, review_type.name)
 
     def get_problem_question_review(self, tg_user_id: int) -> List[ProblemQuestionReview]:
         """
-        Получить список ревью на вопросы от пользователя с tg_user_id
+        Получить из базы данных список ревью на вопросы от пользователя с tg_user_id
         """
         return crud.get_problem_question_review(self.db, tg_user_id)
 
     def add_question_score(self, question_id: int, tg_user_id: int, score: int) -> QuestionScore:
         """
-        Добавить оценку вопроса question_id от пользователя с tg_user_id
+        Добавить в базу данных оценку вопроса question_id от пользователя с tg_user_id
         """
         return crud.add_question_score(self.db, question_id, tg_user_id, score)
 
     def get_question_score(self, question_id: int, tg_user_id: int) -> List[QuestionScore]:
         """
-        Получить оценку вопроса question_id от пользователя с tg_user_id
+        Получить из базы данных оценку вопроса question_id от пользователя с tg_user_id
         """
         return crud.get_question_score(self.db, question_id, tg_user_id)
 
     def get_questions_scores(self, tg_user_id: int) -> List[QuestionScore]:
         """
-        Получить оценки всех вопросов от пользователя с tg_user_id
+        Получить из базы данных оценки всех вопросов от пользователя с tg_user_id
         """
         return crud.get_questions_scores(self.db, tg_user_id)
 
     def remove_questions(self, specialty: str) -> None:
         """
-        Удаляем вопросы по заданной специальности [speciality]
+        Удаляем из базы данных вопросы по заданной специальности [speciality]
         """
         crud.remove_questions(self.db, specialty)
 
     def remove_problem_question_review(self, tg_user_id: int, question_id: int) -> None:
         """
-        Удаляем ревью пользователя tg_user_id на вопрос question_id
+        Удаляем из базы данных ревью пользователя tg_user_id на вопрос question_id
         """
         crud.remove_problem_question_review(self.db, tg_user_id, question_id)
 
     def remove_question_score(self, question_id: int) -> None:
         """
-        Удаляем оценки вопроса с question_id
+        Удаляем из базы данных оценки вопроса с question_id
         """
         crud.remove_question_score(self.db, question_id)
 
     def remove_train_material(self, tg_user_id: int, question_id: int) -> None:
         """
-        Удаляем тренировочные материалы для пользователя tg_user_id по вопросу question_id
+        Удаляем из базы данных тренировочные материалы для пользователя tg_user_id по вопросу question_id
         """
         crud.remove_train_material(self.db, tg_user_id, question_id)

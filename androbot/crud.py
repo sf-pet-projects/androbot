@@ -168,7 +168,7 @@ def get_current_session(db: Session, tg_user_id: int) -> Optional[CurrentSession
 
 def add_train_material(db: Session, question_id: int, tg_user_id: int) -> None:
     """
-    Добавляем тренировочные материалы по вопросу question_id для пользователя tg_user_id
+    Добавляем в базу данных тренировочные материалы по вопросу question_id для пользователя tg_user_id
     """
     additional_info = models.AdditionalInfo(tg_user_id=tg_user_id, question_id=question_id)
     commit_into_db(db, additional_info)
@@ -276,7 +276,7 @@ def add_problem_question_review(
     db: Session, question_id: int, tg_user_id: int, review: str, review_type: str
 ) -> ProblemQuestionReview:
     """
-    Добавляем ревью от пользователя tg_user_id по вопросу question_id
+    Добавляем в базу данных ревью от пользователя tg_user_id по вопросу question_id
     """
     db_problem = models.ProblemQuestionReview(
         question_id=question_id, tg_user_id=tg_user_id, review=review, review_type=review_type
