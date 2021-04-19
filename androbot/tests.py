@@ -106,12 +106,16 @@ def test_get_next_test(act):
     act.add_question(question1)
     act.add_question(question2)
     act.add_question(question3)
+    act.get_next_test(user.tg_user_id)
+    session = act.get_current_session(user.tg_user_id)
+    assert session is not None
     answer1 = Answer(
         quest_id=question1.id,
         tg_user_id=user.tg_user_id,
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
+        session_id=session.id,
     )
     answer2 = Answer(
         quest_id=question2.id,
@@ -119,6 +123,7 @@ def test_get_next_test(act):
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
+        session_id=session.id,
     )
     answer3 = Answer(
         quest_id=question1.id,
@@ -126,6 +131,7 @@ def test_get_next_test(act):
         answer_type=start_new_test()[1],
         text_answer=Utils.get_random_text(50),
         link_to_audio_answer=Utils.get_random_text(50),
+        session_id=session.id,
     )
     act.add_answer(answer1)
     act.add_answer(answer2)
@@ -318,11 +324,11 @@ def test_add_bot_review(act):
     my_review = "Some review"
     my_other_review = "Some new review"
     act.add_user(user)
-    act.add_bot_review(user, my_review, AnswerTypes.VOICE.value)
+    act.add_bot_review(user, my_review, AnswerTypes.VOICE)
     assert act.get_bot_review(user)[0].bot_review == my_review
-    act.add_bot_review(user, my_other_review, AnswerTypes.TEXT.value)
+    act.add_bot_review(user, my_other_review, AnswerTypes.TEXT)
     assert act.get_bot_review(user)[1].bot_review == my_other_review
-    assert act.get_bot_review(user)[1].bot_review_type == AnswerTypes.TEXT.value
+    assert act.get_bot_review(user)[1].bot_review_type == AnswerTypes.TEXT.name
 
 
 def test_add_problem_question_review(act):
