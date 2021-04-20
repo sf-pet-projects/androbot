@@ -12,6 +12,8 @@ class DialogueStates(StatesGroup):
     ARE_YOU_READY_FOR_TEST = State()
     ASK_QUESTION = State()
     GOT_ANSWER = State()
+    NO_ANSWER = State()
+    ANSWER_SCORED_BY_USER = State()
     DO_NOT_UNDERSTAND = State()
     DO_YOU_WANT_GET_ANSWER = State()
     USER_SCORE = State()
