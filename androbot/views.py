@@ -178,7 +178,7 @@ def get_additional_materials_view(tg_user_id: int) -> View:
     if not additional_info:
         additional_info = "К сожалению мы не подготовили материалы к этому вопросу"
     else:
-        additional_info = "Материалы для повторения...\n{}\n".format(additional_info)
+        additional_info = f"Материалы для повторения...\n{additional_info}\n"
 
     answer_text = render_message(get_template("46_additional_materials"), additional_info=additional_info)
 
