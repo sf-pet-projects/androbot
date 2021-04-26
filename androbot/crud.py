@@ -139,7 +139,7 @@ def set_current_question(db: Session, tg_user_id: int, quest_id: int) -> Session
     Назначить вопрос quest_id пользователю tg_user_id
     """
     query = db.query(models.CurrentSession).filter(
-        (models.CurrentSession.tg_user_id == tg_user_id) & (not models.CurrentSession.is_finished == False)  # noqa E712
+        (models.CurrentSession.tg_user_id == tg_user_id) & (models.CurrentSession.is_finished == False)  # noqa E712
     )
     if query is not None and query.count() == 1:
         db_session = query.first()
