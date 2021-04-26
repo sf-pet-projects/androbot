@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from androbot.database import Base
 
 from . import models, schemas
+from .errors import NoCurrentSessionException
 from .models import (
     AdditionalInfo,
     Answer,
@@ -77,12 +78,19 @@ def add_answer(db: Session, answer: schemas.Answer) -> Answer:
     """
     Добавление ответа пользователя на вопрос в базу
     """
+
+    current_session = get_current_session(db, answer.tg_user_id)
+
+    if not current_session:
+        raise NoCurrentSessionException
+
     db_answer = models.Answer(
         quest_id=answer.quest_id,
         tg_user_id=answer.tg_user_id,
         answer_type=answer.answer_type,
         text_answer=answer.text_answer,
         link_to_audio_answer=answer.link_to_audio_answer,
+        session_id=current_session.id,
     )
     db.add(db_answer)
     db.commit()
@@ -112,14 +120,27 @@ def get_passed_questions(db: Session, tg_user_id: int) -> List[int]:
     """
     Получить список id вопросов, на которые ответил пользователь tg_user_id
     """
-    return db.query(models.Answer.quest_id).filter(models.Answer.tg_user_id == tg_user_id).all()
+
+    current_session = get_current_session(db, tg_user_id)
+    if current_session:
+        session_id = current_session.id
+    else:
+        session_id = None
+
+    return (
+        db.query(models.Answer.quest_id)
+        .filter((models.Answer.tg_user_id == tg_user_id) & (models.Answer.session_id == session_id))
+        .all()
+    )
 
 
 def set_current_question(db: Session, tg_user_id: int, quest_id: int) -> Session:
     """
     Назначить вопрос quest_id пользователю tg_user_id
     """
-    query = db.query(models.CurrentSession).filter(models.CurrentSession.tg_user_id == tg_user_id)
+    query = db.query(models.CurrentSession).filter(
+        (models.CurrentSession.tg_user_id == tg_user_id) & (not models.CurrentSession.is_finished == False)  # noqa E712
+    )
     if query is not None and query.count() == 1:
         db_session = query.first()
         db_session.quest_id = quest_id
@@ -127,7 +148,7 @@ def set_current_question(db: Session, tg_user_id: int, quest_id: int) -> Session
         db_session = models.CurrentSession(
             quest_id=quest_id,
             tg_user_id=tg_user_id,
-            is_finished=True,
+            is_finished=False,
         )
         db.add(db_session)
     db.commit()
@@ -148,22 +169,26 @@ def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty) -> None:
     db.close()
 
 
-def get_current_question(db: Session, tg_user_id: int) -> Optional[int]:
-    """
-    Получаем текущий вопрос пользователя tg_user_id
-    """
-    session = db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
-    if session is not None and session.quest_id != 0:
-        return session.quest_id
-    else:
-        return None
-
-
 def get_current_session(db: Session, tg_user_id: int) -> Optional[CurrentSession]:
     """
     Получаем текущую сессию пользователя tg_user_id
     """
-    return db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
+    return (
+        db.query(CurrentSession)
+        .filter((CurrentSession.tg_user_id == tg_user_id) & (CurrentSession.is_finished == False))  # noqa E712
+        .first()
+    )
+
+
+def get_current_question(db: Session, tg_user_id: int) -> Optional[int]:
+    """
+    Получаем текущий вопрос пользователя tg_user_id
+    """
+    session = get_current_session(db, tg_user_id)
+    if session is not None and session.quest_id != 0:
+        return session.quest_id
+    else:
+        return None
 
 
 def add_train_material(db: Session, question_id: int, tg_user_id: int) -> None:
@@ -315,7 +340,12 @@ def remove_sessions(db: Session, tg_user_id: int) -> None:
     """
     Удаляем сессию пользователя по tg_user_id
     """
-    db.query(CurrentSession).filter(models.CurrentSession.tg_user_id == tg_user_id).delete()
+    current_session = get_current_session(db, tg_user_id)
+    if not current_session:
+        raise NoCurrentSessionException
+
+    current_session.is_finished = True
+    db.add(current_session)
     db.commit()
 
 

@@ -195,9 +195,9 @@ class Actions:
         """
         Сбросить сессию (удалить все ответы пользователя, удалить сессию из базы данных)
         """
-        crud.remove_answers(self.db, user.tg_user_id)
+        # crud.remove_answers(self.db, user.tg_user_id)
         crud.remove_sessions(self.db, user.tg_user_id)
-        crud.remove_train_materials(self.db, user.tg_user_id)
+        # crud.remove_train_materials(self.db, user.tg_user_id)
 
     def add_bot_score(self, user: schemas.TelegramUser, bot_score: int) -> BotReview:
         """

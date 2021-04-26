@@ -86,10 +86,7 @@ def get_next_question(tg_user_id: int, answer_type: str) -> View:
             question = act.get_next_test(tg_user_id)
 
     except NoNewQuestionsException:
-        reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-        reply_kb.add(aiotypes.KeyboardButton("🏠 Главное меню"))
-
-        return View("В базе не осталось новых вопросов", reply_kb)
+        return View("В базе не осталось новых вопросов")
 
     if answer_type == AnswerTypes.TEXT.value:
         call_to_action = "текстом"
