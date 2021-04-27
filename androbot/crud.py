@@ -82,7 +82,7 @@ def add_answer(db: Session, answer: schemas.Answer) -> Answer:
     current_session = get_current_session(db, answer.tg_user_id)
 
     if not current_session:
-        raise NoCurrentSessionException
+        raise NoCurrentSessionException("Нет активной сессии")
 
     db_answer = models.Answer(
         quest_id=answer.quest_id,
@@ -180,6 +180,18 @@ def get_current_session(db: Session, tg_user_id: int) -> Optional[CurrentSession
     )
 
 
+def get_last_session(db: Session, tg_user_id: int) -> Optional[CurrentSession]:
+    """
+    Получаем последнюю сессию пользователя tg_user_id
+    """
+    return (
+        db.query(CurrentSession)
+        .filter((CurrentSession.tg_user_id == tg_user_id))
+        .order_by(CurrentSession.id.desc())
+        .first()
+    )
+
+
 def get_current_question(db: Session, tg_user_id: int) -> Optional[int]:
     """
     Получаем текущий вопрос пользователя tg_user_id
@@ -193,9 +205,14 @@ def get_current_question(db: Session, tg_user_id: int) -> Optional[int]:
 
 def add_train_material(db: Session, question_id: int, tg_user_id: int) -> None:
     """
-    Добавляем в базу данных тренировочные материалы по вопросу question_id для пользователя tg_user_id
+    Добавляем в базу данных, признак что пользователь запросил доп.материалы
+    по вопросу question_id для пользователя tg_user_id
     """
-    additional_info = models.AdditionalInfo(tg_user_id=tg_user_id, question_id=question_id)
+    current_session = get_current_session(db, tg_user_id)
+    if not current_session:
+        raise NoCurrentSessionException("Нет активной сессии")
+
+    additional_info = AdditionalInfo(tg_user_id=tg_user_id, question_id=question_id, session_id=current_session.id)
     commit_into_db(db, additional_info)
 
 
@@ -215,9 +232,17 @@ def get_question(db: Session, quest_id: int) -> Question:
 
 def get_train_material(db: Session, tg_user_id: int) -> List[AdditionalInfo]:
     """
-    Получаем тренировочные материалы для пользователя tg_user_id
+    Получаем сколько раз пользователь запросил доп.материалы
     """
-    return list(db.query(AdditionalInfo).filter(models.AdditionalInfo.tg_user_id == tg_user_id))
+    last_session = get_last_session(db, tg_user_id)
+    if not last_session:
+        raise NoCurrentSessionException("Нет активной сессии")
+
+    train_materials = db.query(AdditionalInfo).filter(
+        (AdditionalInfo.tg_user_id == tg_user_id) & (AdditionalInfo.session_id == last_session.id)
+    )
+
+    return list(train_materials)
 
 
 def add_bot_score(db: Session, tg_user_id: int, bot_score: int) -> BotReview:
@@ -258,7 +283,14 @@ def add_question_score(db: Session, question_id: int, tg_user_id: int, score: in
     """
     Добавить оценку вопроса
     """
-    db_question_score = models.QuestionScore(question_id=question_id, tg_user_id=tg_user_id, score=score)
+    current_session = get_current_session(db, tg_user_id)
+    if not current_session:
+        raise NoCurrentSessionException("Нет активной сессии")
+
+    db_question_score = QuestionScore(
+        question_id=question_id, session_id=current_session.id, tg_user_id=tg_user_id, score=score
+    )
+
     commit_into_db(db, db_question_score)
     return db_question_score
 
@@ -267,7 +299,14 @@ def get_questions_scores(db: Session, tg_user_id: int) -> List[QuestionScore]:
     """
     Получаем все оценки вопросов от пользователя tg_user_id
     """
-    db_question_score = db.query(QuestionScore).filter(models.QuestionScore.tg_user_id == tg_user_id)
+    last_session = get_last_session(db, tg_user_id)
+    if not last_session:
+        raise NoCurrentSessionException("Нет активной сессии")
+
+    db_question_score = db.query(QuestionScore).filter(
+        (QuestionScore.tg_user_id == tg_user_id) & (QuestionScore.session_id == last_session.id)
+    )
+
     return list(db_question_score)
 
 
@@ -342,7 +381,7 @@ def remove_sessions(db: Session, tg_user_id: int) -> None:
     """
     current_session = get_current_session(db, tg_user_id)
     if not current_session:
-        raise NoCurrentSessionException
+        raise NoCurrentSessionException("Нет активной сессии")
 
     current_session.is_finished = True
     db.add(current_session)
@@ -389,7 +428,7 @@ def remove_train_material(db: Session, tg_user_id: int, question_id: int) -> Non
     Удаляем тренировочные материалы по вопросу question_id для пользователя c tg_user_id
     """
     db.query(AdditionalInfo).filter(
-        models.AdditionalInfo.tg_user_id == tg_user_id and models.AdditionalInfo.question_id == question_id
+        (AdditionalInfo.tg_user_id == tg_user_id) & (models.AdditionalInfo.question_id == question_id)
     ).delete()
     db.commit()
 
