@@ -310,14 +310,20 @@ def get_questions_scores(db: Session, tg_user_id: int) -> List[QuestionScore]:
     return list(db_question_score)
 
 
-def get_question_score(db: Session, question_id: int, tg_user_id: int) -> QuestionScore:
+def get_question_score(db: Session, question_id: int, tg_user_id: int) -> Optional[QuestionScore]:
     """
     Получаем оценку вопроса question_id от пользователя tg_user_id
     """
+    last_session = get_last_session(db, tg_user_id)
+    if not last_session:
+        raise NoCurrentSessionException("Нет активной сессии")
+
     db_question_score = db.query(QuestionScore).filter(
-        models.QuestionScore.tg_user_id == tg_user_id and models.QuestionScore.question_id == question_id
+        (QuestionScore.tg_user_id == tg_user_id)
+        & (QuestionScore.question_id == question_id)
+        & (QuestionScore.session_id == last_session.id)
     )
-    return db_question_score
+    return db_question_score.first()
 
 
 def get_bot_review(db: Session, tg_user_id: int) -> List[BotReview]:
