@@ -122,7 +122,10 @@ def get_passed_questions(db: Session, tg_user_id: int) -> List[int]:
     """
 
     current_session = get_current_session(db, tg_user_id)
-    session_id = current_session.id or None
+    if current_session:
+        session_id = current_session.id
+    else:
+        session_id = None
 
     return (
         db.query(models.Answer.quest_id)
