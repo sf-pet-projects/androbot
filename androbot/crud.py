@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from androbot.database import Base
 
 from . import models, schemas
+from .errors import NoCurrentSessionException
 from .models import (
     AdditionalInfo,
     Answer,
@@ -77,12 +78,19 @@ def add_answer(db: Session, answer: schemas.Answer) -> Answer:
     """
     Добавление ответа пользователя на вопрос в базу
     """
+
+    current_session = get_current_session(db, answer.tg_user_id)
+
+    if not current_session:
+        raise NoCurrentSessionException("Нет активной сессии")
+
     db_answer = models.Answer(
         quest_id=answer.quest_id,
         tg_user_id=answer.tg_user_id,
         answer_type=answer.answer_type,
         text_answer=answer.text_answer,
         link_to_audio_answer=answer.link_to_audio_answer,
+        session_id=current_session.id,
     )
     db.add(db_answer)
     db.commit()
@@ -112,14 +120,24 @@ def get_passed_questions(db: Session, tg_user_id: int) -> List[int]:
     """
     Получить список id вопросов, на которые ответил пользователь tg_user_id
     """
-    return db.query(models.Answer.quest_id).filter(models.Answer.tg_user_id == tg_user_id).all()
+
+    current_session = get_current_session(db, tg_user_id)
+    session_id = current_session.id if current_session else None
+
+    return (
+        db.query(models.Answer.quest_id)
+        .filter((models.Answer.tg_user_id == tg_user_id) & (models.Answer.session_id == session_id))
+        .all()
+    )
 
 
 def set_current_question(db: Session, tg_user_id: int, quest_id: int) -> Session:
     """
     Назначить вопрос quest_id пользователю tg_user_id
     """
-    query = db.query(models.CurrentSession).filter(models.CurrentSession.tg_user_id == tg_user_id)
+    query = db.query(models.CurrentSession).filter(
+        (models.CurrentSession.tg_user_id == tg_user_id) & (models.CurrentSession.is_finished == False)  # noqa E712
+    )
     if query is not None and query.count() == 1:
         db_session = query.first()
         db_session.quest_id = quest_id
@@ -127,7 +145,7 @@ def set_current_question(db: Session, tg_user_id: int, quest_id: int) -> Session
         db_session = models.CurrentSession(
             quest_id=quest_id,
             tg_user_id=tg_user_id,
-            is_finished=True,
+            is_finished=False,
         )
         db.add(db_session)
     db.commit()
@@ -148,29 +166,50 @@ def edit_specialty(db: Session, tg_user_id: int, specialty: Specialty) -> None:
     db.close()
 
 
+def get_current_session(db: Session, tg_user_id: int) -> Optional[CurrentSession]:
+    """
+    Получаем текущую сессию пользователя tg_user_id
+    """
+    return (
+        db.query(CurrentSession)
+        .filter((CurrentSession.tg_user_id == tg_user_id) & (CurrentSession.is_finished == False))  # noqa E712
+        .first()
+    )
+
+
+def get_last_session(db: Session, tg_user_id: int) -> Optional[CurrentSession]:
+    """
+    Получаем последнюю сессию пользователя tg_user_id
+    """
+    return (
+        db.query(CurrentSession)
+        .filter((CurrentSession.tg_user_id == tg_user_id))
+        .order_by(CurrentSession.id.desc())
+        .first()
+    )
+
+
 def get_current_question(db: Session, tg_user_id: int) -> Optional[int]:
     """
     Получаем текущий вопрос пользователя tg_user_id
     """
-    session = db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
+    session = get_current_session(db, tg_user_id)
     if session is not None and session.quest_id != 0:
         return session.quest_id
     else:
         return None
 
 
-def get_current_session(db: Session, tg_user_id: int) -> Optional[CurrentSession]:
-    """
-    Получаем текущую сессию пользователя tg_user_id
-    """
-    return db.query(CurrentSession).filter(CurrentSession.tg_user_id == tg_user_id).first()
-
-
 def add_train_material(db: Session, question_id: int, tg_user_id: int) -> None:
     """
-    Добавляем в базу данных тренировочные материалы по вопросу question_id для пользователя tg_user_id
+    Добавляем в базу данных, признак что пользователь запросил доп.материалы
+    по вопросу question_id для пользователя tg_user_id
     """
-    additional_info = models.AdditionalInfo(tg_user_id=tg_user_id, question_id=question_id)
+    current_session = get_current_session(db, tg_user_id)
+    if not current_session:
+        raise NoCurrentSessionException("Нет активной сессии")
+
+    additional_info = AdditionalInfo(tg_user_id=tg_user_id, question_id=question_id, session_id=current_session.id)
     commit_into_db(db, additional_info)
 
 
@@ -190,9 +229,17 @@ def get_question(db: Session, quest_id: int) -> Question:
 
 def get_train_material(db: Session, tg_user_id: int) -> List[AdditionalInfo]:
     """
-    Получаем тренировочные материалы для пользователя tg_user_id
+    Получаем сколько раз пользователь запросил доп.материалы
     """
-    return list(db.query(AdditionalInfo).filter(models.AdditionalInfo.tg_user_id == tg_user_id))
+    last_session = get_last_session(db, tg_user_id)
+    if not last_session:
+        raise NoCurrentSessionException("Нет активной сессии")
+
+    train_materials = db.query(AdditionalInfo).filter(
+        (AdditionalInfo.tg_user_id == tg_user_id) & (AdditionalInfo.session_id == last_session.id)
+    )
+
+    return list(train_materials)
 
 
 def add_bot_score(db: Session, tg_user_id: int, bot_score: int) -> BotReview:
@@ -233,7 +280,14 @@ def add_question_score(db: Session, question_id: int, tg_user_id: int, score: in
     """
     Добавить оценку вопроса
     """
-    db_question_score = models.QuestionScore(question_id=question_id, tg_user_id=tg_user_id, score=score)
+    current_session = get_current_session(db, tg_user_id)
+    if not current_session:
+        raise NoCurrentSessionException("Нет активной сессии")
+
+    db_question_score = QuestionScore(
+        question_id=question_id, session_id=current_session.id, tg_user_id=tg_user_id, score=score
+    )
+
     commit_into_db(db, db_question_score)
     return db_question_score
 
@@ -242,18 +296,31 @@ def get_questions_scores(db: Session, tg_user_id: int) -> List[QuestionScore]:
     """
     Получаем все оценки вопросов от пользователя tg_user_id
     """
-    db_question_score = db.query(QuestionScore).filter(models.QuestionScore.tg_user_id == tg_user_id)
+    last_session = get_last_session(db, tg_user_id)
+    if not last_session:
+        raise NoCurrentSessionException("Нет активной сессии")
+
+    db_question_score = db.query(QuestionScore).filter(
+        (QuestionScore.tg_user_id == tg_user_id) & (QuestionScore.session_id == last_session.id)
+    )
+
     return list(db_question_score)
 
 
-def get_question_score(db: Session, question_id: int, tg_user_id: int) -> QuestionScore:
+def get_question_score(db: Session, question_id: int, tg_user_id: int) -> Optional[QuestionScore]:
     """
     Получаем оценку вопроса question_id от пользователя tg_user_id
     """
+    last_session = get_last_session(db, tg_user_id)
+    if not last_session:
+        raise NoCurrentSessionException("Нет активной сессии")
+
     db_question_score = db.query(QuestionScore).filter(
-        models.QuestionScore.tg_user_id == tg_user_id and models.QuestionScore.question_id == question_id
+        (QuestionScore.tg_user_id == tg_user_id)
+        & (QuestionScore.question_id == question_id)
+        & (QuestionScore.session_id == last_session.id)
     )
-    return db_question_score
+    return db_question_score.first()
 
 
 def get_bot_review(db: Session, tg_user_id: int) -> List[BotReview]:
@@ -315,7 +382,12 @@ def remove_sessions(db: Session, tg_user_id: int) -> None:
     """
     Удаляем сессию пользователя по tg_user_id
     """
-    db.query(CurrentSession).filter(models.CurrentSession.tg_user_id == tg_user_id).delete()
+    current_session = get_current_session(db, tg_user_id)
+    if not current_session:
+        raise NoCurrentSessionException("Нет активной сессии")
+
+    current_session.is_finished = True
+    db.add(current_session)
     db.commit()
 
 
@@ -359,7 +431,7 @@ def remove_train_material(db: Session, tg_user_id: int, question_id: int) -> Non
     Удаляем тренировочные материалы по вопросу question_id для пользователя c tg_user_id
     """
     db.query(AdditionalInfo).filter(
-        models.AdditionalInfo.tg_user_id == tg_user_id and models.AdditionalInfo.question_id == question_id
+        (AdditionalInfo.tg_user_id == tg_user_id) & (models.AdditionalInfo.question_id == question_id)
     ).delete()
     db.commit()
 

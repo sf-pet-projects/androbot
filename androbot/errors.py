@@ -29,3 +29,7 @@ class TooManyParamsForLoggingActions(BaseAppError):
 
 class WrongBotScoreFormat(BaseAppError):
     pass
+
+
+class NoCurrentSessionException(BaseAppError):
+    pass

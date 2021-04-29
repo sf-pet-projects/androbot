@@ -86,10 +86,7 @@ def get_next_question(tg_user_id: int, answer_type: str) -> View:
             question = act.get_next_test(tg_user_id)
 
     except NoNewQuestionsException:
-        reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-        reply_kb.add(aiotypes.KeyboardButton("🏠 Главное меню"))
-
-        return View("В базе не осталось новых вопросов", reply_kb)
+        return View("В базе не осталось новых вопросов")
 
     if answer_type == AnswerTypes.TEXT.value:
         call_to_action = "текстом"
@@ -126,17 +123,22 @@ def get_correct_answer(tg_user_id: int) -> View:
     Возвращает View с правильным ответом
     """
     with Actions() as act:
-        correct_answer = act.get_current_question(tg_user_id).text_answer.strip().replace("_", "\\_")
+        current_question = act.get_current_question(tg_user_id)
+        correct_answer = current_question.text_answer.strip().replace("_", "\\_")
+        question_score = act.get_question_score(current_question.id, tg_user_id)
 
     if not correct_answer:
         answer_text = render_message(get_template("40_no_correct_answer"))
+    else:
+        answer_text = render_message(get_template("41_correct_answer"), correct_answer=correct_answer)
+
+    if not correct_answer or question_score:
         row_buttons = [
             aiotypes.KeyboardButton("📚 Отправь материалы"),
             aiotypes.KeyboardButton("➡️ Следующий вопрос"),
         ]
         state = DialogueStates.NO_ANSWER
     else:
-        answer_text = render_message(get_template("41_correct_answer"), correct_answer=correct_answer)
         row_buttons = [
             aiotypes.KeyboardButton("❌ Неверный"),
             aiotypes.KeyboardButton("⚖️ Частично верный"),

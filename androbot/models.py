@@ -80,6 +80,7 @@ class QuestionScore(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
     tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))
     question_id = Column(Integer, ForeignKey("question.id"))
+    session_id = Column(Integer, ForeignKey("session.id"))
     score = Column(Integer, unique=False, index=True)
 
 
@@ -98,4 +99,5 @@ class AdditionalInfo(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True, nullable=False)
     question_id = Column(Integer, ForeignKey("question.id"))
+    session_id = Column(Integer, ForeignKey("session.id"))
     tg_user_id = Column(Integer, ForeignKey("tg_users.tg_user_id"))

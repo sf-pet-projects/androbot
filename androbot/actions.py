@@ -195,9 +195,7 @@ class Actions:
         """
         Сбросить сессию (удалить все ответы пользователя, удалить сессию из базы данных)
         """
-        crud.remove_answers(self.db, user.tg_user_id)
         crud.remove_sessions(self.db, user.tg_user_id)
-        crud.remove_train_materials(self.db, user.tg_user_id)
 
     def add_bot_score(self, user: schemas.TelegramUser, bot_score: int) -> BotReview:
         """
@@ -239,7 +237,7 @@ class Actions:
         """
         return crud.add_question_score(self.db, question_id, tg_user_id, score)
 
-    def get_question_score(self, question_id: int, tg_user_id: int) -> QuestionScore:
+    def get_question_score(self, question_id: int, tg_user_id: int) -> Optional[QuestionScore]:
         """
         Получить из базы данных оценку вопроса question_id от пользователя с tg_user_id
         """
