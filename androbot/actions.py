@@ -201,7 +201,7 @@ class Actions:
         """
         Добавить в базу данных оценку бота от пользователя
         """
-        if bot_score not in range(1, 10):
+        if bot_score not in range(1, 11):
             raise WrongBotScoreFormat("You can have only 1 to 10 score in field BotReview.bot_score")
         return crud.add_bot_score(self.db, user.tg_user_id, bot_score)
 
