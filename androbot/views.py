@@ -253,14 +253,9 @@ def get_bot_score_view():
     answer_text = get_template("55_bot_score")
 
     reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.row(aiotypes.KeyboardButton("1"), aiotypes.KeyboardButton("2"), aiotypes.KeyboardButton("3"))
-    reply_kb.row(aiotypes.KeyboardButton("4"), aiotypes.KeyboardButton("5"), aiotypes.KeyboardButton("6"))
-    reply_kb.row(
-        aiotypes.KeyboardButton("7"),
-        aiotypes.KeyboardButton("8"),
-        aiotypes.KeyboardButton("9"),
-        aiotypes.KeyboardButton("10"),
-    )
+
+    reply_kb.row(*[aiotypes.KeyboardButton(x) for x in range(1, 6)])
+    reply_kb.row(*[aiotypes.KeyboardButton(x) for x in range(6, 11)])
 
     return View(answer_text, reply_kb)
 
