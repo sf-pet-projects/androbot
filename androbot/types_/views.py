@@ -35,3 +35,6 @@ class View:
         self.markup = markup
         self.question_id = question_id
         self.state = state
+
+        if not self.markup:
+            self.markup = aiotypes.ReplyKeyboardRemove()

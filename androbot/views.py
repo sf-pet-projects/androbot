@@ -130,24 +130,26 @@ def get_correct_answer(tg_user_id: int) -> View:
     if not correct_answer:
         answer_text = render_message(get_template("40_no_correct_answer"))
     else:
-        answer_text = render_message(get_template("41_correct_answer"), correct_answer=correct_answer)
+        if question_score:
+            call_to_action = "Выберите, что делать дальше"
+        else:
+            call_to_action = "Оцените свой ответ"
+        answer_text = render_message(
+            get_template("41_correct_answer"), correct_answer=correct_answer, call_to_action=call_to_action
+        )
 
     if not correct_answer or question_score:
-        row_buttons = [
-            aiotypes.KeyboardButton("📚 Отправь материалы"),
-            aiotypes.KeyboardButton("➡️ Следующий вопрос"),
-        ]
+        reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+        reply_kb.row(aiotypes.KeyboardButton("📚 Отправь материалы"), aiotypes.KeyboardButton("➡️ Следующий вопрос"))
         state = DialogueStates.NO_ANSWER
     else:
-        row_buttons = [
+        reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+        reply_kb.add(aiotypes.KeyboardButton("⚖️ Частично верный"))
+        reply_kb.row(
             aiotypes.KeyboardButton("❌ Неверный"),
-            aiotypes.KeyboardButton("⚖️ Частично верный"),
             aiotypes.KeyboardButton("✅ Верный"),
-        ]
+        )
         state = DialogueStates.GOT_ANSWER
-
-    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    reply_kb.row(*row_buttons)
 
     return View(answer_text, reply_kb, state=state)
 
