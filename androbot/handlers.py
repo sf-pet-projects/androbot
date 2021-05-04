@@ -246,6 +246,7 @@ async def not_understand_question(message: aiotypes.Message, state: FSMContext):
     )
 
     with Actions() as act:
+        act.add_question_score(state_data["question_id"], message.from_user.id, score=0)
         act.add_answer(answer)
 
     view = views.get_why_do_not_understand()
