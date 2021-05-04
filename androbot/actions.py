@@ -111,11 +111,11 @@ class Actions:
         """
         tg_user = crud.get_tg_user(self.db, tg_user_id)
         passed_questions = crud.get_passed_questions(self.db, tg_user_id)
-        logger.warning(passed_questions)
+        logger.info(f"{passed_questions=}")
         all_question = crud.get_all_questions(self.db, tg_user.specialty)
-        logger.warning(all_question)
+        logger.info(f"{all_question=}")
         new_questions = list(set(all_question) - set(passed_questions))
-        logger.warning(new_questions)
+        logger.info(f"{new_questions=}")
         if not new_questions:
             crud.remove_sessions(self.db, tg_user.tg_user_id)
             raise NoNewQuestionsException("All questions were answered")
@@ -201,7 +201,7 @@ class Actions:
         """
         Добавить в базу данных оценку бота от пользователя
         """
-        if bot_score not in range(1, 10):
+        if bot_score not in range(1, 11):
             raise WrongBotScoreFormat("You can have only 1 to 10 score in field BotReview.bot_score")
         return crud.add_bot_score(self.db, user.tg_user_id, bot_score)
 

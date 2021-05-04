@@ -243,3 +243,37 @@ def get_user_score_view(user_id: int):
     reply_kb.row(*row_buttons)
 
     return View(answer_text, reply_kb)
+
+
+def get_bot_score_view():
+    """
+    Возвращает view оценки бота
+    """
+
+    answer_text = get_template("55_bot_score")
+
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+
+    reply_kb.row(*[aiotypes.KeyboardButton(x) for x in range(1, 6)])
+    reply_kb.row(*[aiotypes.KeyboardButton(x) for x in range(6, 11)])
+
+    return View(answer_text, reply_kb)
+
+
+def get_bot_review_view():
+    """
+    Возвращает view для отзыва о боте
+    """
+    return View(get_template("56_bot_review"))
+
+
+def get_finish_view():
+    """
+    Возвращает view последнего раздела
+    """
+    answer_text = get_template("60_finish")
+
+    reply_kb = aiotypes.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    reply_kb.add(aiotypes.KeyboardButton("🏠 Главное меню"))
+
+    return View(answer_text, reply_kb)

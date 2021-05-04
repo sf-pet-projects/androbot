@@ -175,6 +175,7 @@ async def after_select_answer_type(message: aiotypes.Message, state: FSMContext)
         DialogueStates.ANSWER_SCORED_BY_USER,
         DialogueStates.HAS_STARTED_TEST,
         DialogueStates.USER_SCORE,
+        DialogueStates.FINISH,
     ],
 )
 async def back_to_main_menu(message: aiotypes.Message):
@@ -474,3 +475,99 @@ async def show_user_score(message: aiotypes.Message, state: FSMContext):
     )
 
     await DialogueStates.USER_SCORE.set()
+
+
+@dp.message_handler(regexp="Оценить бота", state=DialogueStates.USER_SCORE)
+async def show_bot_score_view(message: aiotypes.Message):
+    """
+    Показать экран оценки бота
+    """
+
+    view = views.get_bot_score_view()
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await DialogueStates.next()
+
+
+@dp.message_handler(state=DialogueStates.BOT_SCORE)
+async def show_bot_review_view(message: aiotypes.Message, state: FSMContext):
+    """
+    Сохранить оценку бота, показать просьбу отправить отзыв на бота
+    """
+
+    if not message.text.isdigit():
+        await message.reply("Введите оценку от 1 до 10")
+        await show_bot_score_view(message)
+
+    with Actions() as act:
+        tg_user = schemas.TelegramUser(
+            tg_user_id=message.from_user.id,
+            name=message.from_user.username,
+            username=message.from_user.username,
+        )
+        act.add_bot_score(tg_user, int(message.text))
+
+    state_data = await state.get_data()
+
+    log_event(message.from_user.id, Events.BotGrade, state_data["speciality"], message.text)
+
+    view = views.get_bot_review_view()
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await DialogueStates.next()
+
+
+@dp.message_handler(
+    content_types=[aiotypes.ContentType.TEXT, aiotypes.ContentType.VOICE], state=DialogueStates.BOT_REVIEW
+)
+async def save_review_and_finish_view(message: aiotypes.Message, state: FSMContext):
+    """
+    Сохранить отзыв, завершить работу бота
+    """
+
+    if message.content_type == aiotypes.ContentType.VOICE:
+        review = message.voice.file_id
+        review_type = AnswerTypes.VOICE
+    elif message.content_type == aiotypes.ContentType.TEXT:
+        review = message.text
+        review_type = AnswerTypes.TEXT
+    else:
+        await show_bot_review_view(message)
+        return
+
+    with Actions() as act:
+        tg_user = schemas.TelegramUser(
+            tg_user_id=message.from_user.id,
+            name=message.from_user.username,
+            username=message.from_user.username,
+        )
+        act.add_bot_review(tg_user, review, review_type)
+
+    state_data = await state.get_data()
+
+    log_event(message.from_user.id, Events.BotReview, state_data["speciality"], message.text)
+
+    view = views.get_finish_view()
+
+    log_event(message.from_user.id, Events.Thanks)
+
+    await bot.send_message(
+        text=view.text,
+        chat_id=message.chat.id,
+        parse_mode=aiotypes.ParseMode.MARKDOWN,
+        reply_markup=view.markup,
+    )
+
+    await DialogueStates.next()

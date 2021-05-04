@@ -263,10 +263,9 @@ def add_bot_review(db: Session, tg_user_id: int, review: str, review_type: str) 
     """
     db_review = db.query(BotReview).filter(models.BotReview.tg_user_id == tg_user_id).first()
     if db_review is not None:
-        bot_review = models.BotReview(
-            tg_user_id=tg_user_id, bot_score=db_review.bot_score, bot_review=review, bot_review_type=review_type
-        )
-        commit_into_db(db, bot_review)
+        db_review.bot_review = review
+        db_review.bot_review_type = review_type
+        commit_into_db(db, db_review)
         return db_review
     else:
         bot_review = models.BotReview(

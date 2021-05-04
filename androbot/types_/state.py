@@ -17,3 +17,6 @@ class DialogueStates(StatesGroup):
     DO_NOT_UNDERSTAND = State()
     DO_YOU_WANT_GET_ANSWER = State()
     USER_SCORE = State()
+    BOT_SCORE = State()
+    BOT_REVIEW = State()
+    FINISH = State()
