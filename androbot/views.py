@@ -83,21 +83,23 @@ def get_next_question(tg_user_id: int, answer_type: str) -> View:
     """
     try:
         with Actions() as act:
-            question = act.get_next_test(tg_user_id)
+            question, current_question_number, questions_count = act.get_next_test(tg_user_id)
 
     except NoNewQuestionsException:
         return View("В базе не осталось новых вопросов")
 
-    if answer_type == AnswerTypes.TEXT.value:
-        call_to_action = "текстом"
-    elif answer_type == AnswerTypes.VOICE.value:
+    if answer_type == AnswerTypes.VOICE.value:
         call_to_action = "голосом"
+    else:
+        call_to_action = "текстом"
 
     answer_text = render_message(
         get_template("20_question"),
         question=question.text_question.strip(),
         question_category=question.question_category.strip(),
         call_to_action=call_to_action,
+        current_question_number=current_question_number,
+        questions_count=questions_count,
     )
 
     row_buttons = [
@@ -227,7 +229,7 @@ def get_user_score_view(user_id: int):
 
     if user_score > 84:
         user_score_description = get_template("52_result_excelent")
-    elif user_score > 69:
+    elif user_score > 50:
         user_score_description = get_template("53_result_good")
     else:
         user_score_description = get_template("54_result_bad")
