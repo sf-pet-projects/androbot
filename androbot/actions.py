@@ -1,6 +1,6 @@
 import csv
 import random
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from loguru import logger
 
@@ -105,9 +105,10 @@ class Actions:
             return db_answer
         return None
 
-    def get_next_test(self, tg_user_id: int) -> Question:
+    def get_next_test(self, tg_user_id: int) -> Tuple[Question, int, int]:
         """
         Получить из базы данных следующий тест для пользователя tg_user_id
+        А также номер текущего вопроса и количество вопросов всего
         """
         tg_user = crud.get_tg_user(self.db, tg_user_id)
         passed_questions = crud.get_passed_questions(self.db, tg_user_id)
@@ -123,7 +124,11 @@ class Actions:
         next_quest_id = random.choice(new_questions)
         crud.set_current_question(self.db, tg_user_id, next_quest_id)
         next_quest = get_question(self.db, next_quest_id)
-        return next_quest
+
+        current_question_number = len(passed_questions) + 1
+        questions_count = len(all_question)
+
+        return next_quest, current_question_number, questions_count
 
     def get_current_session(self, tg_user_id: int) -> Optional[CurrentSession]:
         """

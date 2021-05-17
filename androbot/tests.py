@@ -136,7 +136,7 @@ def test_get_next_test(act):
     act.add_answer(answer1)
     act.add_answer(answer2)
     act.add_answer(answer3)
-    question = act.get_next_test(user.tg_user_id)
+    question = act.get_next_test(user.tg_user_id)[0]
     assert question.id == question3.id
     act.remove_user(user)
     act.remove_questions("test")
@@ -157,7 +157,7 @@ def test_get_current_question(act):
     )
     act.add_user(user)
     act.add_question(question)
-    question = act.get_next_test(user.tg_user_id)
+    question = act.get_next_test(user.tg_user_id)[0]
     right_answer = act.get_current_question(user.tg_user_id).text_answer
     assert right_answer == question.text_answer
     act.remove_user(user)
@@ -293,7 +293,7 @@ def test_start_test_after_reset_session(act):
     )
     act.add_answer(answer)
     act.reset_session(user)
-    assert act.get_next_test(user.tg_user_id).text_question == question.text_question
+    assert act.get_next_test(user.tg_user_id)[0].text_question == question.text_question
     act.remove_user(user)
     act.remove_questions("test")
 
