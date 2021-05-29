@@ -50,7 +50,7 @@ poetry run python3 androbot\load_questions.py path_to_csv_file_with_questions.cs
 **Запуск**  
 
 ```
-poetry run python3 androbot/__init__.py
+poetry run androbot
 ```
 
 **Запуск в docker**
