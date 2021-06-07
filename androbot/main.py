@@ -50,7 +50,3 @@ dp = Dispatcher(bot, storage=storage)
 
 def main(dispatcher: Dispatcher):
     executor.start_polling(dispatcher, skip_updates=True)
-
-
-def run_bot():
-    main(dp)
