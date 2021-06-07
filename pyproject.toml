@@ -2,7 +2,7 @@
 name = "androbot"
 version = "0.0.1"
 description = "Telegram bot that tests your skills in android development"
-authors = ["Nikita Churikov <nikita@chur.ru>", "Victoria Shepard <jawektor37@gmail.com>"]
+authors = ["Nikita Churikov <nikita@chur.ru>", "Victoria Shepard <jawektor37@gmail.com>", "Roman Zabolotin <rzabolotin@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
